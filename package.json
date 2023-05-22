@@ -1,0 +1,14 @@
+{
+  "scripts": {
+    "build_css": "npx tailwindcss -i ./style/tailwind/tailwind_base.css -o ./style/tailwind/dist/tailwind.css && npx webpack"
+  },
+  "devDependencies": {
+    "css-loader": "^6.7.3",
+    "mini-css-extract-plugin": "^2.7.5",
+    "tailwindcss": "^3.3.2",
+    "webpack": "^5.82.1"
+  },
+  "dependencies": {
+    "webpack-cli": "^5.1.1"
+  }
+}

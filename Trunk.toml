@@ -1,0 +1,20 @@
+[build]
+target = "./index.html"
+
+[watch]
+ignore = ["./src-tauri"]
+watch = ["index.html", "src/", "style/"]
+
+[serve]
+address = "127.0.0.1"
+port = 1420
+open = false
+
+[[hooks]]
+stage = "pre_build"
+command = "sh"
+# run tailwind build with webpack
+command_arguments = [
+    "-c",
+    "[ ! -d \"./node_modules\" ] && npm i || :; npm run build_css",
+]
