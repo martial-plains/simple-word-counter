@@ -1,16 +1,13 @@
-use std::collections::HashMap;
-use leptos::leptos_dom::ev::{SubmitEvent};
-use leptos::*;
 use leptos::ev::MouseEvent;
-use serde::{Deserialize, Serialize};
-use serde_wasm_bindgen::to_value;
-use wasm_bindgen::prelude::*;
+use leptos::*;
+use regex::Regex;
+use std::collections::HashMap;
 
 #[component]
 pub fn App(cx: Scope) -> impl IntoView {
     let (text, set_text) = create_signal(cx, String::new());
     let (word_count, set_word_count) = create_signal(cx, 0);
-    let (character_count, set_character_count) = create_signal(cx,0);
+    let (character_count, set_character_count) = create_signal(cx, 0);
     let (dictionary, set_dictionary) = create_signal(cx, HashMap::new());
 
     let update_text = move |ev| {
@@ -27,8 +24,10 @@ pub fn App(cx: Scope) -> impl IntoView {
 
             let word_occurrences = |text: String| {
                 let mut occurrence: HashMap<String, u32> = HashMap::new();
-                for word in text.split_ascii_whitespace() {
-                    let word = word.to_lowercase();
+                let re = Regex::new(r"\w+").unwrap();
+
+                for word in re.find_iter(&text) {
+                    let word = word.as_str().to_lowercase();
                     if occurrence.contains_key(&word) {
                         let _ = occurrence.entry(word.to_owned()).and_modify(|w| *w += 1);
                     } else {
@@ -54,12 +53,10 @@ pub fn App(cx: Scope) -> impl IntoView {
         });
     };
 
-    create_effect(cx,
-        move |_| {
-            set_word_count.set(text.get().split_whitespace().count());
-            set_character_count.set(text.get().chars().count());
-        }
-    );
+    create_effect(cx, move |_| {
+        set_word_count.set(text.get().split_whitespace().count());
+        set_character_count.set(text.get().chars().count());
+    });
 
     view! { cx,
         <main class="container md:mx-auto h-screen flex space-y-7">
