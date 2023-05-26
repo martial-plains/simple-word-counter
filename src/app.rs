@@ -72,11 +72,16 @@ pub fn App(cx: Scope) -> impl IntoView {
                 <div class="w-100 md:w-3/6 h-52 md:h-72 bg-white overflow-hidden lg:overflow-auto overflow-y-scroll">
                     <div class="snap-y text-left">
                         {
-                            move || dictionary.get().iter().map(|(key, value)| {
+                            move || {
+                                let dictionary = dictionary.get();
+                                let mut dictionary = dictionary.iter().collect::<Vec<_>>();
+                                dictionary.sort_by(|a, b| a.0.cmp(b.0));
+
+                                dictionary.iter().map(|(key, value)| {
                                 view! {cx,
                                 <p>{format!("{} - {}", key, value)}</p>
                                 }
-                            }).collect::<Vec<_>>()
+                            }).collect::<Vec<_>>()}
                         }
                     </div>
                 </div>
