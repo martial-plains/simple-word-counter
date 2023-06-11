@@ -15,7 +15,7 @@ The Simple Word Counter App is a user-friendly application that allows you to ea
 
 1. Launch the Simple Word Counter App on your device.
 2. Paste the text you want to analyze into the provided text box.
-3 .Click the "Count Words" button to generate the word count dictionary.
+3. Click the "Count Words" button to generate the word count dictionary.
 4. The app will display the word count dictionary, showing each word and its frequency.
 5. The total word count will be shown below the word count dictionary.
 6. The total character count, including spaces and punctuation, will also be displayed.
