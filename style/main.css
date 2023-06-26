@@ -18,12 +18,6 @@
   -webkit-text-size-adjust: 100%;
 }
 
-.container {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-}
-
 @media (prefers-color-scheme: dark) {
   :root {
     color: #f6f6f6;

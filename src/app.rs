@@ -1,31 +1,205 @@
-use leptos::ev::MouseEvent;
-use leptos::*;
+use gloo::console::console_dbg;
+use leptos::{ev::MouseEvent, *};
 use regex::Regex;
+use serde::{Deserialize, Serialize};
+use serde_json::json;
 use std::collections::HashMap;
 
-use std::time::Duration;
+use crate::{
+    components::{StatisticsOptionsPanel, ToggleSwitch},
+    utils::word_count,
+};
+
+#[repr(usize)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
+pub enum StatisticOption {
+    Characters,
+    Paragraphs,
+    ReadingTime,
+    Sentences,
+    SpeakingTime,
+    Words,
+}
+
+#[component]
+pub fn options_dialog<F>(
+    cx: Scope,
+    onbutton_done: F,
+    statistics_options: RwSignal<Vec<StatisticOption>>,
+) -> impl IntoView
+where
+    F: Fn(MouseEvent) + 'static,
+{
+    let show_words = create_rw_signal(
+        cx,
+        statistics_options.get().contains(&StatisticOption::Words),
+    );
+
+    let show_characters = create_rw_signal(
+        cx,
+        statistics_options
+            .get()
+            .contains(&StatisticOption::Characters),
+    );
+
+    let show_sentences = create_rw_signal(
+        cx,
+        statistics_options
+            .get()
+            .contains(&StatisticOption::Sentences),
+    );
+
+    let show_paragraphs = create_rw_signal(
+        cx,
+        statistics_options
+            .get()
+            .contains(&StatisticOption::Paragraphs),
+    );
+
+    let show_reading_time = create_rw_signal(
+        cx,
+        statistics_options
+            .get()
+            .contains(&StatisticOption::ReadingTime),
+    );
+
+    let show_speaking_time = create_rw_signal(
+        cx,
+        statistics_options
+            .get()
+            .contains(&StatisticOption::SpeakingTime),
+    );
+
+    create_effect(cx, move |_| {
+        let mut options = Vec::new();
+
+        if show_words.get() {
+            options.push(StatisticOption::Words);
+        }
+
+        if show_characters.get() {
+            options.push(StatisticOption::Characters);
+        }
+
+        if show_sentences.get() {
+            options.push(StatisticOption::Sentences);
+        }
+
+        if show_paragraphs.get() {
+            options.push(StatisticOption::Paragraphs);
+        }
+
+        if show_reading_time.get() {
+            options.push(StatisticOption::ReadingTime);
+        }
+
+        if show_speaking_time.get() {
+            options.push(StatisticOption::SpeakingTime);
+        }
+
+        statistics_options.set(options);
+    });
+
+    view! { cx,
+        <div id="dialog"
+            class="hidden fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 bg-white shadow-md rounded-md px-8 py-6 space-y-5 drop-shadow-lg dark:bg-slate-800">
+            <h1 class="text-2xl font-semibold">{"Options"}</h1>
+
+            <form class="pb-8 mb-4 h-[400px] overflow-auto">
+                <div class="mb-4">
+                    <ToggleSwitch label="Words" value=show_words/>
+                </div>
+
+                <div class="mb-4">
+                    <ToggleSwitch label="Characters" value=show_characters/>
+                </div>
+
+                <div class="mb-4">
+                    <ToggleSwitch label="Sentences" value=show_sentences/>
+                </div>
+
+                <div class="mb-4">
+                    <ToggleSwitch label="Paragraphs" value=show_paragraphs/>
+                </div>
+
+                <div class="mb-4">
+                    <ToggleSwitch label="Reading Time" value=show_reading_time/>
+                </div>
+
+                <div class="mb-4">
+                    <ToggleSwitch label="Speaking Time" value=show_speaking_time/>
+                </div>
+            </form>
+
+            <div class="flex justify-end">
+                <button id="done" class="px-5 py-2 bg-indigo-500 hover:bg-indigo-700 text-white cursor-pointer rounded-md" on:click=onbutton_done>
+                    {"Done"}</button>
+            </div>
+        </div>
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct GlobalState {
+    text: RwSignal<String>,
+    word_total: RwSignal<usize>,
+    character_total: RwSignal<usize>,
+    dictionary: RwSignal<HashMap<String, u32>>,
+    statistics_options: RwSignal<Vec<StatisticOption>>,
+}
+
+impl GlobalState {
+    fn new(cx: Scope) -> Self {
+        let storage = window().local_storage().unwrap().unwrap();
+
+        let text = create_rw_signal(
+            cx,
+            storage.get_item("text").unwrap().unwrap_or(String::new()),
+        );
+        let word_total = create_rw_signal(cx, 0);
+        let character_total = create_rw_signal(cx, 0);
+        let dictionary = create_rw_signal(cx, HashMap::new());
+        let statistics_options = create_rw_signal(
+            cx,
+            storage
+                .get_item("statistics_options")
+                .unwrap()
+                .map(|s| serde_json::from_str(&s).unwrap())
+                .unwrap_or(vec![
+                    StatisticOption::Words,
+                    StatisticOption::Characters,
+                    StatisticOption::Sentences,
+                    StatisticOption::Paragraphs,
+                    StatisticOption::ReadingTime,
+                    StatisticOption::SpeakingTime,
+                ]),
+        );
+
+        Self {
+            text,
+            word_total,
+            character_total,
+            dictionary,
+            statistics_options,
+        }
+    }
+}
 
 #[component]
 pub fn App(cx: Scope) -> impl IntoView {
     let storage = window().local_storage().unwrap().unwrap();
-
-    let (text, set_text) = create_signal(
-        cx,
-        storage.get_item("text").unwrap().unwrap_or(String::new()),
-    );
-    let (word_count, set_word_count) = create_signal(cx, 0);
-    let (character_count, set_character_count) = create_signal(cx, 0);
-    let (dictionary, set_dictionary) = create_signal(cx, HashMap::new());
+    let state = GlobalState::new(cx);
+    provide_context(cx, state);
 
     let update_text = move |ev| {
         let value: String = event_target_value(&ev);
         storage.set_item("text", &value).unwrap();
-        set_text.set(value);
+        state.text.set(value);
     };
 
     let get_result = move || {
         spawn_local(async move {
-            if text.get().is_empty() {
+            if state.text.get().is_empty() {
                 return;
             }
 
@@ -44,207 +218,125 @@ pub fn App(cx: Scope) -> impl IntoView {
                 occurrence
             };
 
-            set_dictionary.set(word_occurrences(text.get()));
+            state.dictionary.set(word_occurrences(state.text.get()));
         });
     };
 
     let clear_input = move |ev: MouseEvent| {
         ev.prevent_default();
+        let storage = window().local_storage().unwrap().unwrap();
         spawn_local(async move {
-            if text.get().is_empty() {
+            if state.text.get().is_empty() {
                 return;
             }
 
-            set_dictionary.set(HashMap::new());
-            set_text.set(String::new());
+            state.dictionary.set(HashMap::new());
+            state.text.set(String::new());
+            storage.set_item("text", "").unwrap();
         });
     };
 
+    let open_dialog = |_: MouseEvent| {
+        let dialog = document().get_element_by_id("dialog").unwrap();
+        let overlay = document().get_element_by_id("overlay").unwrap();
+
+        dialog.class_list().remove_1("hidden").unwrap();
+        overlay.class_list().remove_1("hidden").unwrap();
+    };
+
+    let close_dialog = |_: MouseEvent| {
+        let dialog = document().get_element_by_id("dialog").unwrap();
+        let overlay = document().get_element_by_id("overlay").unwrap();
+
+        dialog.class_list().add_1("hidden").unwrap();
+        overlay.class_list().add_1("hidden").unwrap();
+    };
+
     create_effect(cx, move |_| {
-        set_word_count.set(text.get().split_whitespace().count());
-        set_character_count.set(text.get().chars().count());
-        get_result()
+        let storage = window().local_storage().unwrap().unwrap();
+        state.word_total.set(word_count(state.text.get().as_str()));
+        state.character_total.set(state.text.get().chars().count());
+        get_result();
+
+        console_dbg!(json!(state.statistics_options.get()));
+
+        storage
+            .set_item(
+                "statistics_options",
+                &json!(state.statistics_options.get()).to_string(),
+            )
+            .unwrap();
     });
 
     view! { cx,
-        <main class="container md:mx-auto h-screen flex space-y-7">
-            <div class="lg:flex bg-gray-200 p-2 border-2 border-gray-400 rounded-lg mb-6 mt-auto mb-auto dark:bg-gray-800">
-                <div class="lg:w-8/12 p-2">
-                    <textarea
-                    class="block w-full h-96 lg:h-full p-2 mb-1 focus:outline-none dark:bg-black"
-                    placeholder="Enter text here"
-                    prop:value={move || text.get()}
-                    on:input=update_text></textarea>
+        <main class="md:mx-auto container h-screen">
+
+            <div id="overlay" class="fixed hidden z-40 w-screen h-screen inset-0 bg-gray-900 bg-opacity-60"></div>
+
+            <OptionsDialog onbutton_done=close_dialog statistics_options=state.statistics_options />
+
+            <div class="space-y-7">
+                <div class="flex">
+                    <button class="px-5 py-2 bg-rose-500 hover:bg-rose-700 text-white cursor-pointer rounded-md flex mr-auto" on:click=clear_input>
+                        { "Clear" }
+                    </button>
+                    <button id="open" class="px-5 py-2 bg-rose-500 hover:bg-rose-700 text-white cursor-pointer rounded-md flex ml-auto" on:click=open_dialog>
+                        { "Show Dialog" }
+                    </button>
                 </div>
-                <div class="lg:w-4/12 p-2">
-                    <div class="mb-4 bg-white p-3 rounded-md border-2 border-gray-700 text-gray-500 dark:bg-gray-800">
-                        <div class="h2 text-3xl text-black mt-2 mb-4 dark:text-white">{"Statistics"}</div>
-                        <div class="border-b-2 border-gray-700 flex justify-between mb-4">
-                            <div class="w-2/5">
-                                <div class="uppercase text-xs">{"Words"}</div>
-                                <span class="text-4xl font-bold text-black dark:text-white">{word_count}</span>
-                            </div>
-                            <div class="w-2/5">
-                                <div class="uppercase text-xs">{"Characters"}</div>
-                                <span class="text-4xl font-bold text-black dark:text-white">{character_count}</span>
-                            </div>
-                        </div>
-                        <div class="border-b-2 border-gray-700 flex justify-between mb-4">
-                            <div class="w-2/5">
-                                <div class="uppercase text-xs">{"Sentences"}</div>
-                                <span class="text-4xl font-bold text-black dark:text-white">{move || sentence_count(text.get())}</span>
-                            </div>
-                            <div class="w-2/5">
-                                <div class="uppercase text-xs">{"Paragraphs"}</div>
-                                <span class="text-4xl font-bold text-black dark:text-white">{move || paragraph_count(text.get())}</span>
-                            </div>
-                        </div>
-                        <div class="border-b-2 border-gray-700 flex justify-between mb-4">
-                            <div class="w-2/5">
-                                <div class="uppercase text-xs whitespace-nowrap">
-                                    {"Reading Time"}
-                                    <span title="Based on 275 words per minute" class="inline-block">
-                                        <i class="fa-solid fa-circle-question"></i>
-                                    </span>
-                                </div>
-                                <div class="flex flex-nowrap">
-                                    <span class="text-3xl text-black dark:text-white">{move || format_duration(cx, calculate_duration(word_count.get(), 275))}</span>
-                                </div>
-                            </div>
-                            <div class="w-2/5">
-                                <div class="uppercase text-xs whitespace-nowrap">
-                                    {"Speaking Time"}
-                                    <span title="Based on 180 words per minute" class="inline-block">
-                                        <i class="fa-solid fa-circle-question"></i>
-                                    </span>
-                                </div>
-                                <div class="flex flex-nowrap">
-                                    <span class="text-3xl text-black dark:text-white">{move || format_duration(cx, calculate_duration(word_count.get(), 180))}</span>
-                                </div>
-                            </div>
-                        </div>
+
+                <div class="lg:flex bg-gray-200 p-2 border-2 border-gray-400 rounded-lg mb-6 mt-auto mb-auto dark:bg-gray-800">
+                    <div class="lg:w-8/12 p-2">
+                        <textarea
+                        class="block w-full h-96 lg:h-full p-2 mb-1 focus:outline-none dark:bg-black"
+                        placeholder="Enter text here"
+                        prop:value={move || state.text.get()}
+                        on:input=update_text></textarea>
                     </div>
-                    <div class="bg-white p-3 rounded-md border-2 border-gray-700 dark:bg-gray-800">
-                        <div class="text-3xl mt-2 mb-4 h5">{"Keyword Density"}</div>
-                        <div class="relative overflow-auto h-full max-h-56 mb-4 border-b-2">
-                            {move || if text.get().is_empty() {
-                                view! {cx,
+                    <div class="lg:w-4/12 p-2">
+                        {
+                            move || view! {cx, <StatisticsOptionsPanel statistics_options=state.statistics_options.get() word_total=state.word_total.get() character_total=state.character_total.get() text=state.text.get()/>}
+                        }
+                        <div class="bg-white p-3 rounded-md border-2 border-gray-700 dark:bg-gray-800">
+                            <div class="text-3xl mt-2 mb-4 h5">{"Keyword Density"}</div>
+                            <div class="relative overflow-auto h-full max-h-56 mb-4 border-b-2">
+                                {move || if state.text.get().is_empty() {
+                                    view! {cx,
+                                        <>
+                                            <p>{"Start typing to get a list of keywords that are most used"}</p>
+                                        </>
+                                    }
+                                } else {
+                                    view! {cx,
                                     <>
-                                        <p>{"Start typing to get a list of keywords that are most used"}</p>
-                                    </>
-                                }
-                            } else {
-                                view! {cx,
-                                <>
-                                    <ul>
-                                        {
-                                            move || {
-                                                let dictionary = dictionary.get();
-                                                let mut dictionary = dictionary.iter().collect::<Vec<_>>();
-                                                dictionary.sort_by(|a, b| a.1.cmp(b.1));
-                                                dictionary.iter().enumerate().rev().map(|(index, (key, value))| {
-                                                    view! {cx,
-                                                        <li class=format!("keywords-item flex justify-between items-center px-2 {} dark:bg-gray-800", if index % 2 == 0 { "bg-gray-300" } else { "bg-white" })>
-                                                            <div class="inline-block overflow-hidden overflow-ellipsis text-sm">{key.to_string()}</div>
-                                                            <div class="flex items-baseline text-gray-700 ">
-                                                                <span class="font-semibold dark:text-white">{value.to_string()}</span>
-                                                                <span class="text-xs w-14 text-right dark:text-white">{format!("{:.2}%", (**value as f32 / dictionary.len() as  f32) * 100.0)}</span>
-                                                            </div>
-                                                        </li>
-                                                    }
-                                                }).collect::<Vec<_>>()
+                                        <ul>
+                                            {
+                                                move || {
+                                                    let dictionary = state.dictionary.get();
+                                                    let mut dictionary = dictionary.iter().collect::<Vec<_>>();
+                                                    dictionary.sort_by(|a, b| a.1.cmp(b.1));
+                                                    dictionary.iter().enumerate().rev().map(|(index, (key, value))| {
+                                                        view! {cx,
+                                                            <li class=format!("keywords-item flex justify-between items-center px-2 {} dark:bg-gray-800", if index % 2 == 0 { "bg-gray-300" } else { "bg-white" })>
+                                                                <div class="inline-block overflow-hidden overflow-ellipsis text-sm">{key.to_string()}</div>
+                                                                <div class="flex items-baseline text-gray-700 ">
+                                                                    <span class="font-semibold dark:text-white">{value.to_string()}</span>
+                                                                    <span class="text-xs w-14 text-right dark:text-white">{format!("{:.2}%", (**value as f32 / dictionary.len() as  f32) * 100.0)}</span>
+                                                                </div>
+                                                            </li>
+                                                        }
+                                                    }).collect::<Vec<_>>()
+                                                }
                                             }
-                                        }
-                                    </ul>
-                                </>
-                                }
-                            }}
+                                        </ul>
+                                    </>
+                                    }
+                                }}
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </main>
-    }
-}
-
-fn sentence_count(text: String) -> usize {
-    let pattern = Regex::new(r"(?i)[^.!?]+[.!?]").unwrap();
-    let matches = pattern.find_iter(&text);
-    let sentences: Vec<&str> = matches.map(|m| m.as_str()).collect();
-
-    sentences.len()
-}
-
-fn paragraph_count(text: String) -> usize {
-    if text.is_empty() {
-        return 0;
-    }
-
-    let pattern = Regex::new(r"\n\s*\n").unwrap();
-    let paragraphs: Vec<&str> = pattern.split(&text).collect();
-
-    paragraphs.len()
-}
-
-fn calculate_duration(word_count: usize, words_per_minute: u32) -> Duration {
-    let minutes = f64::from(word_count as u32) / f64::from(words_per_minute);
-    let seconds = minutes * 60.0;
-
-    Duration::from_secs(seconds as u64)
-}
-
-fn format_duration(cx: Scope, duration: Duration) -> impl IntoView {
-    let total_seconds = duration.as_secs();
-    let minutes = total_seconds / 60;
-    let seconds = total_seconds % 60;
-
-    if minutes > 60 {
-        let hours = minutes / 60;
-        let remaining_minutes = minutes % 60;
-
-        view! {cx,
-            <>
-                <div class="flex flex-nowrap text-center space-x-2">
-                    <span class="text-3xl text-black dark:text-white">
-                        {hours}
-                        <div class="text-xs">{ if hours != 1 { "hrs" } else { "hr" } }</div>
-                    </span>
-                    <span class="text-3xl text-black dark:text-white">
-                        {remaining_minutes}
-                        <div class="text-xs">{ if remaining_minutes != 1 { "mins" } else { "min" } }</div>
-                    </span>
-                    <span class="text-3xl text-black dark:text-white">
-                        {seconds}
-                        <div class="text-xs">{  if seconds != 1 { "secs" } else { "sec" } }</div>
-                    </span>
-                </div>
-            </>
-        }
-    } else if minutes > 0 {
-        view! {cx,
-            <>
-                <div class="flex flex-nowrap text-center space-x-2">
-                    <span class="text-3xl text-black dark:text-white">
-                        {minutes}
-                        <div class="text-xs">{ if minutes != 1 { "mins" } else { "min" } }</div>
-                    </span>
-                    <span class="text-3xl text-black dark:text-white">
-                        {seconds}
-                        <div class="text-xs">{ if seconds != 1 { "secs" } else { "sec" } }</div>
-                    </span>
-                </div>
-            </>
-        }
-    } else {
-        view! {cx,
-            <>
-                <div class="flex flex-nowrap text-center">
-                    <span class="text-3xl text-black dark:text-white">
-                        {seconds}
-                        <div class="text-xs">{"secs"}</div>
-                    </span>
-                </div>
-            </>
-        }
     }
 }
