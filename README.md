@@ -27,7 +27,6 @@ The Simple Word Counter App is built using the following technologies:
 * HTML: For creating the structure and layout of the user interface.
 * CSS: For styling the app and enhancing its visual appeal.
 * Rust: For implementing the word counting and character counting functionality.
-* Tauri: For building the desktop application with a web frontend
 
 ## License
 

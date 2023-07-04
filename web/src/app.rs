@@ -281,14 +281,14 @@ pub fn App(cx: Scope) -> impl IntoView {
                         { "Clear" }
                     </button>
                     <button id="open" class="px-5 py-2 bg-rose-500 hover:bg-rose-700 text-white cursor-pointer rounded-md flex ml-auto" on:click=open_dialog>
-                        { "Show Dialog" }
+                        { "Show Options" }
                     </button>
                 </div>
 
-                <div class="lg:flex bg-gray-200 p-2 border-2 border-gray-400 rounded-lg mb-6 mt-auto mb-auto dark:bg-gray-800">
+                <div class="lg:flex bg-gray-200 p-2 mb-6 mt-auto mb-auto dark:bg-gray-800">
                     <div class="lg:w-8/12 p-2">
                         <textarea
-                        class="block w-full h-96 lg:h-full p-2 mb-1 focus:outline-none dark:bg-black"
+                        class="block w-full h-96 lg:h-full p-2 mb-1 border-2 border-gray-400 rounded-lg focus:outline-none dark:bg-black"
                         placeholder="Enter text here"
                         prop:value={move || state.text.get()}
                         on:input=update_text></textarea>

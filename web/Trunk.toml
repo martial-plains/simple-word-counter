@@ -1,14 +1,18 @@
 [build]
 target = "./index.html"
+release = true
+public_url = "/simple-word-counter/"
 
 [watch]
-ignore = ["./src-tauri"]
 watch = ["index.html", "src/", "style/"]
 
 [serve]
 address = "127.0.0.1"
 port = 1420
 open = false
+
+[clean]
+dist = "dist"
 
 [[hooks]]
 stage = "pre_build"
