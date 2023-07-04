@@ -258,8 +258,6 @@ pub fn App(cx: Scope) -> impl IntoView {
         state.character_total.set(state.text.get().chars().count());
         get_result();
 
-        console_dbg!(json!(state.statistics_options.get()));
-
         storage
             .set_item(
                 "statistics_options",
