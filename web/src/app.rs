@@ -1,14 +1,15 @@
-use gloo::console::console_dbg;
 use leptos::{ev::MouseEvent, *};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::OnceLock};
 
 use crate::{
     components::{StatisticsOptionsPanel, ToggleSwitch},
     utils::word_count,
 };
+
+static WORD_REGEX: OnceLock<Regex> = OnceLock::new();
 
 #[repr(usize)]
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -205,8 +206,7 @@ pub fn App(cx: Scope) -> impl IntoView {
 
             let word_occurrences = |text: String| {
                 let mut occurrence: HashMap<String, u32> = HashMap::new();
-                let re = Regex::new(r"\w+").unwrap();
-
+                let re = WORD_REGEX.get_or_init(|| Regex::new(r"\w+").unwrap());
                 for word in re.find_iter(&text) {
                     let word = word.as_str().to_lowercase();
                     if occurrence.contains_key(&word) {

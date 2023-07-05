@@ -1,9 +1,13 @@
-use std::time::Duration;
+use std::{sync::OnceLock, time::Duration};
 
 use regex::Regex;
 
+static WORD_REGEX: OnceLock<Regex> = OnceLock::new();
+static SENTENCE_REGEX: OnceLock<Regex> = OnceLock::new();
+static PARAGRAPH_REGEX: OnceLock<Regex> = OnceLock::new();
+
 pub fn word_count(text: &str) -> usize {
-    let pattern = Regex::new(r"\w+").unwrap();
+    let pattern = WORD_REGEX.get_or_init(|| Regex::new(r"\w+").unwrap());
     let matches = pattern.find_iter(text);
     let words: Vec<&str> = matches.map(|m| m.as_str()).collect();
 
@@ -11,7 +15,7 @@ pub fn word_count(text: &str) -> usize {
 }
 
 pub fn sentence_count(text: &str) -> usize {
-    let pattern = Regex::new(r"(?i)[^.!?]+[.!?]").unwrap();
+    let pattern = SENTENCE_REGEX.get_or_init(|| Regex::new(r"(?i)[^.!?]+[.!?]").unwrap());
     let matches = pattern.find_iter(text);
     let sentences: Vec<&str> = matches.map(|m| m.as_str()).collect();
 
@@ -23,7 +27,7 @@ pub fn paragraph_count(text: &str) -> usize {
         return 0;
     }
 
-    let pattern = Regex::new(r"\n\s*\n").unwrap();
+    let pattern = PARAGRAPH_REGEX.get_or_init(|| Regex::new(r"\n\s*\n").unwrap());
     let paragraphs: Vec<&str> = pattern.split(text).collect();
 
     paragraphs.len()
