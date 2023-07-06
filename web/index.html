@@ -4,11 +4,29 @@
 <head>
   <meta charset="utf-8" />
   <title>Simple Word Counter</title>
+  <link data-trunk rel="copy-file" href="app.webmanifest">
+  <link data-trunk rel="copy-dir" href="public" />
+  <link data-trunk rel="copy-file" href="service_worker.js">
   <link data-trunk rel="css" href="dist/style/main.css" />
   <link data-trunk rel="rust" data-wasm-opt="z" />
+  <link rel="manifest" href="app.webmanifest">
+  <link rel="icon" type="image/png" href="images/favicon.png">
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="white">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="black">
   <script src="https://kit.fontawesome.com/fa657e4425.js" crossorigin="anonymous"></script>
+  <script>
+    // register ServiceWorker
+    window.onload = () => {
+      'use strict';
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker
+          .register('./service_worker.js');
+      }
+    }
+  </script>
 </head>
 
 </html>
