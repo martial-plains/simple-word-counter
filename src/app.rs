@@ -143,8 +143,6 @@ where
 #[derive(Debug, Clone, Copy)]
 struct GlobalState {
     text: RwSignal<String>,
-    word_total: RwSignal<usize>,
-    character_total: RwSignal<usize>,
     dictionary: RwSignal<HashMap<String, u32>>,
     statistics_options: RwSignal<Vec<StatisticOption>>,
 }
@@ -154,8 +152,6 @@ impl GlobalState {
         let storage = window().local_storage().unwrap().unwrap();
 
         let text = create_rw_signal(cx, storage.get_item("text").unwrap().unwrap_or_default());
-        let word_total = create_rw_signal(cx, 0);
-        let character_total = create_rw_signal(cx, 0);
         let dictionary = create_rw_signal(cx, HashMap::new());
         let statistics_options = create_rw_signal(
             cx,
@@ -175,11 +171,17 @@ impl GlobalState {
 
         Self {
             text,
-            word_total,
-            character_total,
             dictionary,
             statistics_options,
         }
+    }
+
+    fn word_total(&self) -> usize {
+        word_count(self.text.get().as_str())
+    }
+
+    fn character_total(&self) -> usize {
+        self.text.get().chars().count()
     }
 }
 
@@ -251,8 +253,6 @@ pub fn App(cx: Scope) -> impl IntoView {
 
     create_effect(cx, move |_| {
         let storage = window().local_storage().unwrap().unwrap();
-        state.word_total.set(word_count(state.text.get().as_str()));
-        state.character_total.set(state.text.get().chars().count());
         get_result();
 
         storage
@@ -290,7 +290,7 @@ pub fn App(cx: Scope) -> impl IntoView {
                     </div>
                     <div class="lg:w-4/12 p-2">
                         {
-                            move || view! {cx, <StatisticsOptionsPanel statistics_options=state.statistics_options.get() word_total=state.word_total.get() character_total=state.character_total.get() text=state.text.get()/>}
+                            move || view! {cx, <StatisticsOptionsPanel statistics_options=state.statistics_options.get() word_total=state.word_total() character_total=state.character_total() text=state.text.get()/>}
                         }
                         <div class="bg-white p-3 rounded-md border-2 border-gray-700 dark:bg-gray-800">
                             <div class="text-3xl mt-2 mb-4 h5">{"Keyword Density"}</div>
