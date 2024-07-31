@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>Simple Word Counter</title>
+  
+  
+  
+  <link rel="stylesheet" href="/simple-word-counter/main-22c786ad76cb669d.css" integrity="sha384&#x2D;o1jYTIZoNHhJmlGDgEZ4yWtm3NZg8okZfV&#x2B;oTRGX&#x2F;VMsWeEr5EUkpvkZAHVcZ8ZV"/>
+  
+<script type="module" nonce="lCF/VhqqtIRcg0uUQuxs8Q==">
+import init, * as bindings from '/simple-word-counter/simple-word-counter-web-9a3584d97248523.js';
+const wasm = await init('/simple-word-counter/simple-word-counter-web-9a3584d97248523_bg.wasm');
+
+
+window.wasmBindings = bindings;
+
+
+dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
+
+</script>
+  <link rel="manifest" href="app.webmanifest">
+  <link rel="icon" type="image/png" href="public/images/favicon.png">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" media="(prefers-color-scheme: light)" content="white">
+  <meta name="theme-color" media="(prefers-color-scheme: dark)" content="black">
+  <script src="https://kit.fontawesome.com/fa657e4425.js" crossorigin="anonymous"></script>
+  <script>
+    // register ServiceWorker
+    window.onload = () => {
+      'use strict';
+
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker
+          .register('./service_worker.js');
+      }
+    }
+  </script>
+
+<link rel="modulepreload" href="/simple-word-counter/simple-word-counter-web-9a3584d97248523.js" crossorigin=anonymous integrity="sha384-90Gh8MlxDgL8p9zg19NmqOdfu8eQyY8d05MLC4a7SW444UqX9ykaKa1pi7TpiPdD">
+<link rel="modulepreload" href="/simple-word-counter/snippets/leptos_reactive-f7acfdcc44aba8c4/inline0.js" crossorigin=anonymous integrity="sha384-d8yvubxSuBtBulKXqV75Cat9GIXWqR6k5Bgu7yCoAeqNsM97ASkJwvRGESa4d7HR">
+<link rel="preload" href="/simple-word-counter/simple-word-counter-web-9a3584d97248523_bg.wasm" crossorigin=anonymous integrity="sha384-tUUFU5yG/HixU/x9oEgjsvaiVye3eEAu3X/EAwXMfb7ElhPonFTfzx/fSd4SmGxv" as="fetch" type="application/wasm"></head>
+
+</html>
