@@ -153,10 +153,7 @@ impl GlobalState {
     fn new(cx: Scope) -> Self {
         let storage = window().local_storage().unwrap().unwrap();
 
-        let text = create_rw_signal(
-            cx,
-            storage.get_item("text").unwrap().unwrap_or(String::new()),
-        );
+        let text = create_rw_signal(cx, storage.get_item("text").unwrap().unwrap_or_default());
         let word_total = create_rw_signal(cx, 0);
         let character_total = create_rw_signal(cx, 0);
         let dictionary = create_rw_signal(cx, HashMap::new());
