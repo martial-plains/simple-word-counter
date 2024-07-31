@@ -28,7 +28,6 @@ jobs:
     # build css and rust
     - name: run trunk
       run: |
-        cd web
         rustup override set nightly 
         trunk build --release
 
@@ -38,5 +37,5 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_branch: gh-pages
-        publish_dir: web/dist
+        publish_dir: /dist
         # cname: abex.dev
