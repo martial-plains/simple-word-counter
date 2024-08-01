@@ -225,7 +225,7 @@ pub fn App() -> impl IntoView {
         });
     };
 
-    let open_dialog = |_: MouseEvent| {
+    let open_options = |_: MouseEvent| {
         let dialog = document().get_element_by_id("dialog").unwrap();
         let overlay = document().get_element_by_id("overlay").unwrap();
 
@@ -233,7 +233,7 @@ pub fn App() -> impl IntoView {
         overlay.class_list().remove_1("hidden").unwrap();
     };
 
-    let close_dialog = |_: MouseEvent| {
+    let close_options = |_: MouseEvent| {
         let dialog = document().get_element_by_id("dialog").unwrap();
         let overlay = document().get_element_by_id("overlay").unwrap();
 
@@ -259,65 +259,76 @@ pub fn App() -> impl IntoView {
 
             <div id="overlay" class="fixed hidden z-40 w-screen h-screen inset-0 bg-gray-900 bg-opacity-60"></div>
 
-            <OptionsDialog onbutton_done=close_dialog statistics_options=state.statistics_options />
+            <OptionsDialog onbutton_done=close_options statistics_options=state.statistics_options />
 
             <div class="space-y-7">
-                <div class="flex">
-                    <button class="px-5 py-2 bg-rose-500 hover:bg-rose-700 text-white cursor-pointer rounded-md flex mr-auto" on:click=clear_input>
-                        { "Clear" }
-                    </button>
-                    <button id="open" class="px-5 py-2 bg-rose-500 hover:bg-rose-700 text-white cursor-pointer rounded-md flex ml-auto" on:click=open_dialog>
-                        { "Show Options" }
-                    </button>
-                </div>
-
                 <div class="lg:flex bg-gray-200 p-2 mb-6 mt-auto mb-auto dark:bg-gray-800">
-                    <div class="lg:w-8/12 p-2">
-                        <textarea
-                        class="block w-full h-96 lg:h-full p-2 mb-1 border-2 border-gray-400 rounded-lg focus:outline-none dark:bg-black"
-                        placeholder="Enter text here"
-                        prop:value={move || state.text.get()}
-                        on:input=update_text></textarea>
-                    </div>
-                    <div class="lg:w-4/12 p-2">
-                        {
-                            move || view! { <StatisticsOptionsPanel />}
-                        }
-                        <div class="bg-white p-3 rounded-md border-2 border-gray-700 dark:bg-gray-800">
-                            <div class="text-3xl mt-2 mb-4 h5">{"Keyword Density"}</div>
-                            <div class="relative overflow-auto h-full max-h-56 mb-4 border-b-2">
-                                {move || if state.text.get().is_empty() {
-                                    view! {
-                                        <>
-                                            <p>{"Start typing to get a list of keywords that are most used"}</p>
-                                        </>
-                                    }
-                                } else {
-                                    view! {
-                                    <>
-                                        <ul>
-                                            {
-                                                move || {
-                                                    let dictionary = state.dictionary.get();
-                                                    let mut dictionary = dictionary.iter().collect::<Vec<_>>();
-                                                    dictionary.sort_by(|a, b| a.1.cmp(b.1));
-                                                    dictionary.iter().enumerate().rev().map(|(index, (key, value))| {
-                                                        view! {
-                                                            <li class=format!("keywords-item flex justify-between items-center px-2 {} dark:bg-gray-800", if index % 2 == 0 { "bg-gray-300" } else { "bg-white" })>
-                                                                <div class="inline-block overflow-hidden overflow-ellipsis text-sm">{key.to_string()}</div>
-                                                                <div class="flex items-baseline text-gray-700 ">
-                                                                    <span class="font-semibold dark:text-white">{value.to_string()}</span>
-                                                                    <span class="text-xs w-14 text-right dark:text-white">{format!("{:.2}%", (**value as f32 / dictionary.len() as  f32) * 100.0)}</span>
-                                                                </div>
-                                                            </li>
-                                                        }
-                                                    }).collect::<Vec<_>>()
-                                                }
+                    <div class="lg:flex lg:flex-col w-full">
+                        <div class="flex items-center justify-between px-3 py-2 border-b dark:border-gray-600">
+                            <div class="flex flex-wrap items-center divide-gray-200 sm:divide-x sm:rtl:divide-x-reverse dark:divide-gray-600">
+                                <div class="flex items-center space-x-1 rtl:space-x-reverse sm:pe-4">
+                                    <button type="button" class="p-2 text-gray-500 rounded cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600" on:click=clear_input>
+                                        <svg class="w-4 h-4" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M38 12.83L35.17 10 24 21.17 12.83 10 10 12.83 21.17 24 10 35.17 12.83 38 24 26.83 35.17 38 38 35.17 26.83 24z"/><path d="M0 0h48v48H0z" fill="none"/></svg>
+                                        <span class="sr-only">{ "Clear Input" }</span>
+                                    </button>
+                                    <button type="button" class="p-2 text-gray-500 rounded cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600" on:click=open_options>
+                                        <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M18 7.5h-.423l-.452-1.09.3-.3a1.5 1.5 0 0 0 0-2.121L16.01 2.575a1.5 1.5 0 0 0-2.121 0l-.3.3-1.089-.452V2A1.5 1.5 0 0 0 11 .5H9A1.5 1.5 0 0 0 7.5 2v.423l-1.09.452-.3-.3a1.5 1.5 0 0 0-2.121 0L2.576 3.99a1.5 1.5 0 0 0 0 2.121l.3.3L2.423 7.5H2A1.5 1.5 0 0 0 .5 9v2A1.5 1.5 0 0 0 2 12.5h.423l.452 1.09-.3.3a1.5 1.5 0 0 0 0 2.121l1.415 1.413a1.5 1.5 0 0 0 2.121 0l.3-.3 1.09.452V18A1.5 1.5 0 0 0 9 19.5h2a1.5 1.5 0 0 0 1.5-1.5v-.423l1.09-.452.3.3a1.5 1.5 0 0 0 2.121 0l1.415-1.414a1.5 1.5 0 0 0 0-2.121l-.3-.3.452-1.09H18a1.5 1.5 0 0 0 1.5-1.5V9A1.5 1.5 0 0 0 18 7.5Zm-8 6a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/>
+                                            </svg>
+                                        <span class="sr-only">{ "Settings" }</span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="lg:flex lg:flex-row">
+                            <div class="lg:w-8/12 p-2">
+                                <textarea
+                                class="block w-full h-96 lg:h-full p-2 mb-1 border-2 border-gray-400 rounded-lg focus:outline-none dark:bg-black"
+                                placeholder="Enter text here"
+                                prop:value={move || state.text.get()}
+                                on:input=update_text></textarea>
+                            </div>
+                            <div class="lg:w-4/12 p-2">
+                                {
+                                    move || view! { <StatisticsOptionsPanel />}
+                                }
+                                <div class="bg-white p-3 rounded-md border-2 border-gray-700 dark:bg-gray-800">
+                                    <div class="text-3xl mt-2 mb-4 h5">{"Keyword Density"}</div>
+                                    <div class="relative overflow-auto h-full max-h-56 mb-4 border-b-2">
+                                        {move || if state.text.get().is_empty() {
+                                            view! {
+                                                <>
+                                                    <p>{"Start typing to get a list of keywords that are most used"}</p>
+                                                </>
                                             }
-                                        </ul>
-                                    </>
-                                    }
-                                }}
+                                        } else {
+                                            view! {
+                                            <>
+                                                <ul>
+                                                    {
+                                                        move || {
+                                                            let dictionary = state.dictionary.get();
+                                                            let mut dictionary = dictionary.iter().collect::<Vec<_>>();
+                                                            dictionary.sort_by(|a, b| a.1.cmp(b.1));
+                                                            dictionary.iter().enumerate().rev().map(|(index, (key, value))| {
+                                                                view! {
+                                                                    <li class=format!("keywords-item flex justify-between items-center px-2 {} dark:bg-gray-800", if index % 2 == 0 { "bg-gray-300" } else { "bg-white" })>
+                                                                        <div class="inline-block overflow-hidden overflow-ellipsis text-sm">{key.to_string()}</div>
+                                                                        <div class="flex items-baseline text-gray-700 ">
+                                                                            <span class="font-semibold dark:text-white">{value.to_string()}</span>
+                                                                            <span class="text-xs w-14 text-right dark:text-white">{format!("{:.2}%", (**value as f32 / dictionary.len() as  f32) * 100.0)}</span>
+                                                                        </div>
+                                                                    </li>
+                                                                }
+                                                            }).collect::<Vec<_>>()
+                                                        }
+                                                    }
+                                                </ul>
+                                            </>
+                                            }
+                                        }}
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
