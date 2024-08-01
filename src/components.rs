@@ -17,91 +17,91 @@ pub fn statistics_options_panel() -> impl IntoView {
         <div class="mb-4 bg-white p-3 rounded-md border-2 border-gray-700 text-gray-500 dark:bg-gray-800">
             <div class="h2 text-3xl text-black mt-2 mb-4 dark:text-white">{"Statistics"}</div>
             {
+                move || {
+                    let mut row = Vec::new();
+                    let mut rows = Vec::new();
 
-                let mut row = Vec::new();
-                let mut rows = Vec::new();
 
+                    for (index, option) in state.statistics_options.get().iter().enumerate() {
+                        if index % 2 == 0 {
+                            rows.push(view! {
+                                <div class="border-b-2 border-gray-700 flex justify-between mb-4">
+                                    {row.clone()}
+                                </div>
+                            });
+                            row.clear()
+                        }
 
-                for (index, option) in state.statistics_options.get().iter().enumerate() {
-                    if index % 2 == 0 {
-                        rows.push(view! {
-                            <div class="border-b-2 border-gray-700 flex justify-between mb-4">
-                                {row.clone()}
-                            </div>
-                        });
-                        row.clear()
-                    }
-
-                    row.push(view! {
-                        <div class="w-2/5">
-                            {
-                                match option {
-                                    StatisticOption::Characters => view! {
-                                        <>
-                                            <div class="uppercase text-xs">{"Characters"}</div>
-                                            <span class="text-4xl text-black dark:text-white">{state.character_total()}</span>
-                                        </>
-                                    },
-                                    StatisticOption::Paragraphs => view! {
-                                        <>
-                                            <div class="uppercase text-xs">{"Paragraphs"}</div>
-                                            <span class="text-4xl text-black dark:text-white">{paragraph_count(&state.text.get())}</span>
-                                        </>
-                                    },
-                                    StatisticOption::ReadingTime => view! {
-                                        <>
-                                            <div class="uppercase text-xs whitespace-nowrap">
-                                                {"Reading Time"}
-                                                <span title="Based on 275 words per minute" class="inline-block">
-                                                    <i class="fa-solid fa-circle-question"></i>
-                                                </span>
-                                            </div>
-                                            <div class="flex flex-nowrap">
-                                                <span class="text-3xl text-black dark:text-white">{move || format_duration( calculate_duration(state.word_total(), 275))}</span>
-                                            </div>
-                                        </>
-                                    },
-                                    StatisticOption::Sentences => view! {
-                                        <>
-                                            <div class="uppercase text-xs">{"Sentences"}</div>
-                                            <span class="text-4xl text-black dark:text-white">{sentence_count(&state.text.get())}</span>
-                                        </>
-                                    },
-                                    StatisticOption::SpeakingTime => view! {
-                                        <>
-                                            <div class="uppercase text-xs whitespace-nowrap">
-                                                {"Speaking Time"}
-                                                <span title="Based on 180 words per minute" class="inline-block">
-                                                    <i class="fa-solid fa-circle-question"></i>
-                                                </span>
-                                            </div>
-                                            <div class="flex flex-nowrap">
-                                                <span class="text-3xl text-black dark:text-white">{move || format_duration( calculate_duration(state.word_total(), 180))}</span>
-                                            </div>
-                                        </>
-                                    },
-                                    StatisticOption::Words => view! {
-                                        <>
-                                            <div class="uppercase text-xs">{"Words"}</div>
-                                            <span class="text-4xl text-black dark:text-white">{state.word_total()}</span>
-                                        </>
-                                    },
+                        row.push(view! {
+                            <div class="w-2/5">
+                                {
+                                    match option {
+                                        StatisticOption::Characters => view! {
+                                            <>
+                                                <div class="uppercase text-xs">{"Characters"}</div>
+                                                <span class="text-4xl text-black dark:text-white">{state.character_total()}</span>
+                                            </>
+                                        },
+                                        StatisticOption::Paragraphs => view! {
+                                            <>
+                                                <div class="uppercase text-xs">{"Paragraphs"}</div>
+                                                <span class="text-4xl text-black dark:text-white">{paragraph_count(&state.text.get())}</span>
+                                            </>
+                                        },
+                                        StatisticOption::ReadingTime => view! {
+                                            <>
+                                                <div class="uppercase text-xs whitespace-nowrap">
+                                                    {"Reading Time"}
+                                                    <span title="Based on 275 words per minute" class="inline-block">
+                                                        <i class="fa-solid fa-circle-question"></i>
+                                                    </span>
+                                                </div>
+                                                <div class="flex flex-nowrap">
+                                                    <span class="text-3xl text-black dark:text-white">{move || format_duration( calculate_duration(state.word_total(), 275))}</span>
+                                                </div>
+                                            </>
+                                        },
+                                        StatisticOption::Sentences => view! {
+                                            <>
+                                                <div class="uppercase text-xs">{"Sentences"}</div>
+                                                <span class="text-4xl text-black dark:text-white">{sentence_count(&state.text.get())}</span>
+                                            </>
+                                        },
+                                        StatisticOption::SpeakingTime => view! {
+                                            <>
+                                                <div class="uppercase text-xs whitespace-nowrap">
+                                                    {"Speaking Time"}
+                                                    <span title="Based on 180 words per minute" class="inline-block">
+                                                        <i class="fa-solid fa-circle-question"></i>
+                                                    </span>
+                                                </div>
+                                                <div class="flex flex-nowrap">
+                                                    <span class="text-3xl text-black dark:text-white">{move || format_duration( calculate_duration(state.word_total(), 180))}</span>
+                                                </div>
+                                            </>
+                                        },
+                                        StatisticOption::Words => view! {
+                                            <>
+                                                <div class="uppercase text-xs">{"Words"}</div>
+                                                <span class="text-4xl text-black dark:text-white">{state.word_total()}</span>
+                                            </>
+                                        },
+                                    }
                                 }
-                            }
-                        </div>
-                    });
-
-                    if index == state.statistics_options.get().len() - 1 && !row.is_empty() {
-                        rows.push(view! {
-                            <div class="    border-gray-700 flex justify-between mb-2">
-                                {row.clone()}
                             </div>
                         });
+
+                        if index == state.statistics_options.get().len() - 1 && !row.is_empty() {
+                            rows.push(view! {
+                                <div class="    border-gray-700 flex justify-between mb-2">
+                                    {row.clone()}
+                                </div>
+                            });
+                        }
                     }
+
+                    rows
                 }
-
-                rows
-
             }
             <div class="border-b-2 border-gray-700 flex justify-between mb-4">
                 <div class="w-2/5">
