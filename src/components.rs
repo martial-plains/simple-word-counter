@@ -14,7 +14,7 @@ use crate::{
 pub fn statistics_options_panel() -> impl IntoView {
     let state = use_context::<GlobalState>().unwrap_or_default();
     view! {
-        <div class="mb-4 bg-white p-3 rounded-md border-2 border-gray-700 text-gray-500 dark:bg-gray-800">
+        <div class="mb-4 bg-white p-3 rounded-md border-2 border-gray-700 text-gray-500 dark:bg-gray-800 overflow-y-auto max-h-75">
             <div class="h2 text-3xl text-black mt-2 mb-4 dark:text-white">{"Statistics"}</div>
             {
                 move || {
