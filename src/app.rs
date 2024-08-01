@@ -24,54 +24,45 @@ pub enum StatisticOption {
 
 #[component]
 pub fn options_dialog<F>(
-    cx: Scope,
     onbutton_done: F,
     statistics_options: RwSignal<Vec<StatisticOption>>,
 ) -> impl IntoView
 where
     F: Fn(MouseEvent) + 'static,
 {
-    let show_words = create_rw_signal(
-        cx,
-        statistics_options.get().contains(&StatisticOption::Words),
-    );
+    let show_words = create_rw_signal(statistics_options.get().contains(&StatisticOption::Words));
 
     let show_characters = create_rw_signal(
-        cx,
         statistics_options
             .get()
             .contains(&StatisticOption::Characters),
     );
 
     let show_sentences = create_rw_signal(
-        cx,
         statistics_options
             .get()
             .contains(&StatisticOption::Sentences),
     );
 
     let show_paragraphs = create_rw_signal(
-        cx,
         statistics_options
             .get()
             .contains(&StatisticOption::Paragraphs),
     );
 
     let show_reading_time = create_rw_signal(
-        cx,
         statistics_options
             .get()
             .contains(&StatisticOption::ReadingTime),
     );
 
     let show_speaking_time = create_rw_signal(
-        cx,
         statistics_options
             .get()
             .contains(&StatisticOption::SpeakingTime),
     );
 
-    create_effect(cx, move |_| {
+    create_effect(move |_| {
         let mut options = Vec::new();
 
         if show_words.get() {
@@ -101,7 +92,7 @@ where
         statistics_options.set(options);
     });
 
-    view! { cx,
+    view! {
         <div id="dialog"
             class="hidden fixed z-50 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 bg-white shadow-md rounded-md px-8 py-6 space-y-5 drop-shadow-lg dark:bg-slate-800">
             <h1 class="text-2xl font-semibold">{"Options"}</h1>
@@ -140,21 +131,20 @@ where
     }
 }
 
-#[derive(Debug, Clone, Copy)]
-struct GlobalState {
-    text: RwSignal<String>,
-    dictionary: RwSignal<HashMap<String, u32>>,
-    statistics_options: RwSignal<Vec<StatisticOption>>,
+#[derive(Debug, Default, Clone, Copy)]
+pub struct GlobalState {
+    pub text: RwSignal<String>,
+    pub dictionary: RwSignal<HashMap<String, u32>>,
+    pub statistics_options: RwSignal<Vec<StatisticOption>>,
 }
 
 impl GlobalState {
-    fn new(cx: Scope) -> Self {
+    fn new() -> Self {
         let storage = window().local_storage().unwrap().unwrap();
 
-        let text = create_rw_signal(cx, storage.get_item("text").unwrap().unwrap_or_default());
-        let dictionary = create_rw_signal(cx, HashMap::new());
+        let text = create_rw_signal(storage.get_item("text").unwrap().unwrap_or_default());
+        let dictionary = create_rw_signal(HashMap::new());
         let statistics_options = create_rw_signal(
-            cx,
             storage
                 .get_item("statistics_options")
                 .unwrap()
@@ -176,20 +166,20 @@ impl GlobalState {
         }
     }
 
-    fn word_total(&self) -> usize {
+    pub fn word_total(&self) -> usize {
         word_count(self.text.get().as_str())
     }
 
-    fn character_total(&self) -> usize {
+    pub fn character_total(&self) -> usize {
         self.text.get().chars().count()
     }
 }
 
 #[component]
-pub fn App(cx: Scope) -> impl IntoView {
+pub fn App() -> impl IntoView {
     let storage = window().local_storage().unwrap().unwrap();
-    let state = GlobalState::new(cx);
-    provide_context(cx, state);
+    let state = GlobalState::new();
+    provide_context(state);
 
     let update_text = move |ev| {
         let value: String = event_target_value(&ev);
@@ -251,8 +241,9 @@ pub fn App(cx: Scope) -> impl IntoView {
         overlay.class_list().add_1("hidden").unwrap();
     };
 
-    create_effect(cx, move |_| {
+    create_effect(move |_| {
         let storage = window().local_storage().unwrap().unwrap();
+        let _ = state.text.get();
         get_result();
 
         storage
@@ -263,7 +254,7 @@ pub fn App(cx: Scope) -> impl IntoView {
             .unwrap();
     });
 
-    view! { cx,
+    view! {
         <main class="md:mx-auto container h-screen">
 
             <div id="overlay" class="fixed hidden z-40 w-screen h-screen inset-0 bg-gray-900 bg-opacity-60"></div>
@@ -290,19 +281,19 @@ pub fn App(cx: Scope) -> impl IntoView {
                     </div>
                     <div class="lg:w-4/12 p-2">
                         {
-                            move || view! {cx, <StatisticsOptionsPanel statistics_options=state.statistics_options.get() word_total=state.word_total() character_total=state.character_total() text=state.text.get()/>}
+                            move || view! { <StatisticsOptionsPanel />}
                         }
                         <div class="bg-white p-3 rounded-md border-2 border-gray-700 dark:bg-gray-800">
                             <div class="text-3xl mt-2 mb-4 h5">{"Keyword Density"}</div>
                             <div class="relative overflow-auto h-full max-h-56 mb-4 border-b-2">
                                 {move || if state.text.get().is_empty() {
-                                    view! {cx,
+                                    view! {
                                         <>
                                             <p>{"Start typing to get a list of keywords that are most used"}</p>
                                         </>
                                     }
                                 } else {
-                                    view! {cx,
+                                    view! {
                                     <>
                                         <ul>
                                             {
@@ -311,7 +302,7 @@ pub fn App(cx: Scope) -> impl IntoView {
                                                     let mut dictionary = dictionary.iter().collect::<Vec<_>>();
                                                     dictionary.sort_by(|a, b| a.1.cmp(b.1));
                                                     dictionary.iter().enumerate().rev().map(|(index, (key, value))| {
-                                                        view! {cx,
+                                                        view! {
                                                             <li class=format!("keywords-item flex justify-between items-center px-2 {} dark:bg-gray-800", if index % 2 == 0 { "bg-gray-300" } else { "bg-white" })>
                                                                 <div class="inline-block overflow-hidden overflow-ellipsis text-sm">{key.to_string()}</div>
                                                                 <div class="flex items-baseline text-gray-700 ">

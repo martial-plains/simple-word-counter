@@ -1,24 +1,19 @@
 use std::time::Duration;
 
 use leptos::{
-    component, create_effect, create_node_ref, event_target_checked, html::Input, view, IntoView,
-    RwSignal, Scope, SignalGet, SignalSet,
+    component, create_effect, create_node_ref, event_target_checked, html::Input, use_context,
+    view, IntoView, RwSignal, SignalGet, SignalSet,
 };
 
 use crate::{
-    app::StatisticOption,
+    app::{GlobalState, StatisticOption},
     utils::{calculate_duration, paragraph_count, sentence_count},
 };
 
 #[component]
-pub fn statistics_options_panel(
-    cx: Scope,
-    statistics_options: Vec<StatisticOption>,
-    word_total: usize,
-    character_total: usize,
-    text: String,
-) -> impl IntoView {
-    view! {cx,
+pub fn statistics_options_panel() -> impl IntoView {
+    let state = use_context::<GlobalState>().unwrap_or_default();
+    view! {
         <div class="mb-4 bg-white p-3 rounded-md border-2 border-gray-700 text-gray-500 dark:bg-gray-800">
             <div class="h2 text-3xl text-black mt-2 mb-4 dark:text-white">{"Statistics"}</div>
             {
@@ -27,9 +22,9 @@ pub fn statistics_options_panel(
                 let mut rows = Vec::new();
 
 
-                for (index, option) in statistics_options.iter().enumerate() {
+                for (index, option) in state.statistics_options.get().iter().enumerate() {
                     if index % 2 == 0 {
-                        rows.push(view! {cx,
+                        rows.push(view! {
                             <div class="border-b-2 border-gray-700 flex justify-between mb-4">
                                 {row.clone()}
                             </div>
@@ -37,23 +32,23 @@ pub fn statistics_options_panel(
                         row.clear()
                     }
 
-                    row.push(view! {cx,
+                    row.push(view! {
                         <div class="w-2/5">
                             {
                                 match option {
-                                    StatisticOption::Characters => view! { cx,
+                                    StatisticOption::Characters => view! {
                                         <>
                                             <div class="uppercase text-xs">{"Characters"}</div>
-                                            <span class="text-4xl text-black dark:text-white">{character_total}</span>
+                                            <span class="text-4xl text-black dark:text-white">{state.character_total()}</span>
                                         </>
                                     },
-                                    StatisticOption::Paragraphs => view! { cx,
+                                    StatisticOption::Paragraphs => view! {
                                         <>
                                             <div class="uppercase text-xs">{"Paragraphs"}</div>
-                                            <span class="text-4xl text-black dark:text-white">{paragraph_count(&text)}</span>
+                                            <span class="text-4xl text-black dark:text-white">{paragraph_count(&state.text.get())}</span>
                                         </>
                                     },
-                                    StatisticOption::ReadingTime => view! { cx,
+                                    StatisticOption::ReadingTime => view! {
                                         <>
                                             <div class="uppercase text-xs whitespace-nowrap">
                                                 {"Reading Time"}
@@ -62,17 +57,17 @@ pub fn statistics_options_panel(
                                                 </span>
                                             </div>
                                             <div class="flex flex-nowrap">
-                                                <span class="text-3xl text-black dark:text-white">{move || format_duration(cx, calculate_duration(word_total, 275))}</span>
+                                                <span class="text-3xl text-black dark:text-white">{move || format_duration( calculate_duration(state.word_total(), 275))}</span>
                                             </div>
                                         </>
                                     },
-                                    StatisticOption::Sentences => view! { cx,
+                                    StatisticOption::Sentences => view! {
                                         <>
                                             <div class="uppercase text-xs">{"Sentences"}</div>
-                                            <span class="text-4xl text-black dark:text-white">{sentence_count(&text)}</span>
+                                            <span class="text-4xl text-black dark:text-white">{sentence_count(&state.text.get())}</span>
                                         </>
                                     },
-                                    StatisticOption::SpeakingTime => view! {cx,
+                                    StatisticOption::SpeakingTime => view! {
                                         <>
                                             <div class="uppercase text-xs whitespace-nowrap">
                                                 {"Speaking Time"}
@@ -81,14 +76,14 @@ pub fn statistics_options_panel(
                                                 </span>
                                             </div>
                                             <div class="flex flex-nowrap">
-                                                <span class="text-3xl text-black dark:text-white">{move || format_duration(cx, calculate_duration(word_total, 180))}</span>
+                                                <span class="text-3xl text-black dark:text-white">{move || format_duration( calculate_duration(state.word_total(), 180))}</span>
                                             </div>
                                         </>
                                     },
-                                    StatisticOption::Words => view! { cx,
+                                    StatisticOption::Words => view! {
                                         <>
                                             <div class="uppercase text-xs">{"Words"}</div>
-                                            <span class="text-4xl text-black dark:text-white">{word_total}</span>
+                                            <span class="text-4xl text-black dark:text-white">{state.word_total()}</span>
                                         </>
                                     },
                                 }
@@ -96,8 +91,8 @@ pub fn statistics_options_panel(
                         </div>
                     });
 
-                    if index == statistics_options.len() - 1 && !row.is_empty() {
-                        rows.push(view! {cx,
+                    if index == state.statistics_options.get().len() - 1 && !row.is_empty() {
+                        rows.push(view! {
                             <div class="    border-gray-700 flex justify-between mb-2">
                                 {row.clone()}
                             </div>
@@ -121,18 +116,18 @@ pub fn statistics_options_panel(
 }
 
 #[component]
-pub fn toggle_switch(cx: Scope, label: &'static str, value: RwSignal<bool>) -> impl IntoView {
-    let input_ref = create_node_ref::<Input>(cx);
+pub fn toggle_switch(label: &'static str, value: RwSignal<bool>) -> impl IntoView {
+    let input_ref = create_node_ref::<Input>();
     let onchange = move |e| value.set(event_target_checked(&e));
 
-    create_effect(cx, move |_| {
+    create_effect(move |_| {
         if let Some(inputs) = input_ref.clone().get() {
             println!("{}", value.get());
             inputs.set_checked(value.get())
         }
     });
 
-    view! { cx,
+    view! {
         <label class="relative flex justify-between items-center group p-2 text-xl">
             {label}
             <input _ref=input_ref type="checkbox" class="absolute left-1/2 -translate-x-1/2 w-full h-full peer appearance-none rounded-md" checked=value.get() on:change=onchange />
@@ -141,7 +136,7 @@ pub fn toggle_switch(cx: Scope, label: &'static str, value: RwSignal<bool>) -> i
     }
 }
 
-fn format_duration(cx: Scope, duration: Duration) -> impl IntoView {
+fn format_duration(duration: Duration) -> impl IntoView {
     let total_seconds = duration.as_secs();
     let minutes = total_seconds / 60;
     let seconds = total_seconds % 60;
@@ -150,7 +145,7 @@ fn format_duration(cx: Scope, duration: Duration) -> impl IntoView {
         let hours = minutes / 60;
         let remaining_minutes = minutes % 60;
 
-        view! {cx,
+        view! {
             <>
                 <div class="flex flex-nowrap text-center space-x-2">
                     <span class="text-3xl text-black dark:text-white">
@@ -169,7 +164,7 @@ fn format_duration(cx: Scope, duration: Duration) -> impl IntoView {
             </>
         }
     } else if minutes > 0 {
-        view! {cx,
+        view! {
             <>
                 <div class="flex flex-nowrap text-center space-x-2">
                     <span class="text-3xl text-black dark:text-white">
@@ -184,7 +179,7 @@ fn format_duration(cx: Scope, duration: Duration) -> impl IntoView {
             </>
         }
     } else {
-        view! {cx,
+        view! {
             <>
                 <div class="flex flex-nowrap text-center">
                     <span class="text-3xl text-black dark:text-white">
