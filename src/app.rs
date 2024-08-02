@@ -19,6 +19,7 @@ pub enum StatisticOption {
     ReadingTime,
     Sentences,
     SpeakingTime,
+    UniqueWords,
     Words,
 }
 
@@ -31,6 +32,12 @@ where
     F: Fn(MouseEvent) + 'static,
 {
     let show_words = create_rw_signal(statistics_options.get().contains(&StatisticOption::Words));
+
+    let show_unique_words = create_rw_signal(
+        statistics_options
+            .get()
+            .contains(&StatisticOption::UniqueWords),
+    );
 
     let show_characters = create_rw_signal(
         statistics_options
@@ -73,6 +80,10 @@ where
 
         if show_words.get() {
             options.push(StatisticOption::Words);
+        }
+
+        if show_unique_words.get() {
+            options.push(StatisticOption::UniqueWords);
         }
 
         if show_characters.get() {
@@ -135,6 +146,10 @@ where
                 <div class="mb-4">
                     <ToggleSwitch label="Speaking Time" value=show_speaking_time/>
                 </div>
+
+                <div class="mb-4">
+                    <ToggleSwitch label="Unique Words" value=show_unique_words/>
+                </div>
             </form>
 
             <div class="flex justify-end">
@@ -187,6 +202,24 @@ impl GlobalState {
         let words: Vec<&str> = matches.map(|m| m.as_str()).collect();
 
         words.len()
+    }
+
+    pub fn unique_word_count(&self) -> usize {
+        let text = self.text.get();
+        let pattern = &WORD_REGEX;
+        let matches = pattern.find_iter(&text);
+        let words: Vec<&str> = matches.map(|m| m.as_str()).collect();
+
+        words
+            .iter()
+            .fold(Vec::new(), |mut acc, word| {
+                if !acc.contains(word) {
+                    acc.push(word)
+                }
+
+                acc
+            })
+            .len()
     }
 
     pub fn sentence_count(&self) -> usize {

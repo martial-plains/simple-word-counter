@@ -83,6 +83,12 @@ pub fn statistics_options_panel() -> impl IntoView {
                                                 </div>
                                             </>
                                         },
+                                        StatisticOption::UniqueWords => view! {
+                                            <>
+                                                <div class="uppercase text-xs">{"Unique Words"}</div>
+                                                <span class="text-4xl text-black dark:text-white">{state.unique_word_count()}</span>
+                                            </>
+                                        },
                                         StatisticOption::Words => view! {
                                             <>
                                                 <div class="uppercase text-xs">{"Words"}</div>
