@@ -15,6 +15,7 @@ static WORD_REGEX: OnceLock<Regex> = OnceLock::new();
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum StatisticOption {
     Characters,
+    LineCount,
     Paragraphs,
     ReadingTime,
     Sentences,
@@ -50,6 +51,12 @@ where
             .contains(&StatisticOption::Paragraphs),
     );
 
+    let show_line_count = create_rw_signal(
+        statistics_options
+            .get()
+            .contains(&StatisticOption::LineCount),
+    );
+
     let show_reading_time = create_rw_signal(
         statistics_options
             .get()
@@ -81,6 +88,10 @@ where
             options.push(StatisticOption::Paragraphs);
         }
 
+        if show_line_count.get() {
+            options.push(StatisticOption::LineCount);
+        }
+
         if show_reading_time.get() {
             options.push(StatisticOption::ReadingTime);
         }
@@ -107,7 +118,7 @@ where
                 </div>
 
                 <div class="mb-4">
-                    <ToggleSwitch label="Sentences" value=show_sentences/>
+                    <ToggleSwitch label="Line Count" value=show_line_count/>
                 </div>
 
                 <div class="mb-4">
@@ -116,6 +127,10 @@ where
 
                 <div class="mb-4">
                     <ToggleSwitch label="Reading Time" value=show_reading_time/>
+                </div>
+
+                <div class="mb-4">
+                    <ToggleSwitch label="Sentences" value=show_sentences/>
                 </div>
 
                 <div class="mb-4">
@@ -172,6 +187,10 @@ impl GlobalState {
 
     pub fn character_total(&self) -> usize {
         self.text.get().chars().count()
+    }
+
+    pub fn line_count(&self) -> usize {
+        self.text.get().lines().count()
     }
 }
 

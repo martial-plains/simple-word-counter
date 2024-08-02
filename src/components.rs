@@ -42,6 +42,12 @@ pub fn statistics_options_panel() -> impl IntoView {
                                                 <span class="text-4xl text-black dark:text-white">{state.character_total()}</span>
                                             </>
                                         },
+                                        StatisticOption::LineCount => view! {
+                                            <>
+                                                <div class="uppercase text-xs">{"Line Count"}</div>
+                                                <span class="text-4xl text-black dark:text-white">{state.line_count()}</span>
+                                            </>
+                                        },
                                         StatisticOption::Paragraphs => view! {
                                             <>
                                                 <div class="uppercase text-xs">{"Paragraphs"}</div>
@@ -93,7 +99,7 @@ pub fn statistics_options_panel() -> impl IntoView {
 
                         if index == state.statistics_options.get().len() - 1 && !row.is_empty() {
                             rows.push(view! {
-                                <div class="    border-gray-700 flex justify-between mb-2">
+                                <div class="border-gray-700 flex justify-between mb-2">
                                     {row.clone()}
                                 </div>
                             });
