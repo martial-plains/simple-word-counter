@@ -76,6 +76,12 @@ pub fn statistics_options_panel() -> impl IntoView {
                                                 <span class="text-4xl text-black dark:text-white">{state.sentence_count()}</span>
                                             </>
                                         },
+                                        StatisticOption::LongestSentenceWords => view! {
+                                            <>
+                                                <div class="uppercase text-xs">{"Longest Sentence (Words)"}</div>
+                                                <span class="text-4xl text-black dark:text-white">{state.show_longest_sentence_words_count()}</span>
+                                            </>
+                                        },
                                         StatisticOption::SpeakingTime => view! {
                                             <>
                                                 <div class="uppercase text-xs whitespace-nowrap">
