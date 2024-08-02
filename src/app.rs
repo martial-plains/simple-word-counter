@@ -21,6 +21,7 @@ pub enum StatisticOption {
     Sentences,
     LongestSentenceWords,
     ShortestSentenceWords,
+    AvgSentenceWords,
     AvgWordLength,
     SpeakingTime,
     UniqueWords,
@@ -71,6 +72,12 @@ where
         statistics_options
             .get()
             .contains(&StatisticOption::ShortestSentenceWords),
+    );
+
+    let show_avg_sentence_words = create_rw_signal(
+        statistics_options
+            .get()
+            .contains(&StatisticOption::AvgSentenceWords),
     );
 
     let show_avg_word_length = create_rw_signal(
@@ -134,6 +141,10 @@ where
             options.push(StatisticOption::ShortestSentenceWords);
         }
 
+        if show_avg_sentence_words.get() {
+            options.push(StatisticOption::AvgSentenceWords);
+        }
+
         if show_avg_word_length.get() {
             options.push(StatisticOption::AvgWordLength);
         }
@@ -165,6 +176,10 @@ where
             <form class="pb-8 mb-4 h-[400px] overflow-auto">
                 <div class="mb-4">
                     <ToggleSwitch label="Words" value=show_words/>
+                </div>
+
+                <div class="mb-4">
+                    <ToggleSwitch label="Average Sentence (Words)" value=show_avg_sentence_words/>
                 </div>
 
                 <div class="mb-4">
@@ -271,6 +286,24 @@ impl GlobalState {
         let words: Vec<usize> = matches.map(|m| m.as_str().len()).collect();
 
         words.iter().sum::<usize>() as f64 / words.len() as f64
+    }
+
+    pub fn avg_sentence_words(&self) -> f64 {
+        let text = self.text.get();
+
+        let sentences: Vec<usize> = {
+            let pattern = &SENTENCE_REGEX;
+            let matches = pattern.find_iter(&text);
+            matches.map(|m| m.as_str().len()).collect()
+        };
+
+        let words: Vec<&str> = {
+            let pattern = &WORD_REGEX;
+            let matches = pattern.find_iter(&text);
+            matches.map(|m| m.as_str()).collect()
+        };
+
+        words.len() as f64 / sentences.len() as f64
     }
 
     pub fn unique_word_count(&self) -> usize {
