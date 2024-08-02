@@ -2,14 +2,13 @@ use leptos::{ev::MouseEvent, *};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use std::{collections::HashMap, sync::OnceLock};
+use std::{collections::HashMap, sync::LazyLock};
 
-use crate::{
-    components::{StatisticsOptionsPanel, ToggleSwitch},
-    utils::word_count,
-};
+use crate::components::{StatisticsOptionsPanel, ToggleSwitch};
 
-static WORD_REGEX: OnceLock<Regex> = OnceLock::new();
+static WORD_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\w+").unwrap());
+static SENTENCE_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"(?i)[^.!?]+[.!?]").unwrap());
+static PARAGRAPH_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\n\s*\n").unwrap());
 
 #[repr(usize)]
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -181,8 +180,34 @@ impl GlobalState {
         }
     }
 
-    pub fn word_total(&self) -> usize {
-        word_count(self.text.get().as_str())
+    pub fn word_count(&self) -> usize {
+        let text = self.text.get();
+        let pattern = &WORD_REGEX;
+        let matches = pattern.find_iter(&text);
+        let words: Vec<&str> = matches.map(|m| m.as_str()).collect();
+
+        words.len()
+    }
+
+    pub fn sentence_count(&self) -> usize {
+        let text = self.text.get();
+        let pattern = &SENTENCE_REGEX;
+        let matches = pattern.find_iter(&text);
+        let sentences: Vec<&str> = matches.map(|m| m.as_str()).collect();
+
+        sentences.len()
+    }
+
+    pub fn paragraph_count(&self) -> usize {
+        let text = self.text.get();
+        if text.is_empty() {
+            return 0;
+        }
+
+        let pattern = &PARAGRAPH_REGEX;
+        let paragraphs: Vec<&str> = pattern.split(&text).collect();
+
+        paragraphs.len()
     }
 
     pub fn character_total(&self) -> usize {
@@ -214,7 +239,7 @@ pub fn App() -> impl IntoView {
 
             let word_occurrences = |text: String| {
                 let mut occurrence: HashMap<String, u32> = HashMap::new();
-                let re = WORD_REGEX.get_or_init(|| Regex::new(r"\w+").unwrap());
+                let re = &WORD_REGEX;
                 for word in re.find_iter(&text) {
                     let word = word.as_str().to_lowercase();
                     if occurrence.contains_key(&word) {

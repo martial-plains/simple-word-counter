@@ -1,6 +1,5 @@
 mod app;
 mod components;
-mod utils;
 
 use app::App;
 use leptos::{mount_to_body, view};

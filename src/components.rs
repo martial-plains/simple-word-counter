@@ -5,10 +5,7 @@ use leptos::{
     view, IntoView, RwSignal, SignalGet, SignalSet,
 };
 
-use crate::{
-    app::{GlobalState, StatisticOption},
-    utils::{calculate_duration, paragraph_count, sentence_count},
-};
+use crate::app::{GlobalState, StatisticOption};
 
 #[component]
 pub fn statistics_options_panel() -> impl IntoView {
@@ -51,7 +48,7 @@ pub fn statistics_options_panel() -> impl IntoView {
                                         StatisticOption::Paragraphs => view! {
                                             <>
                                                 <div class="uppercase text-xs">{"Paragraphs"}</div>
-                                                <span class="text-4xl text-black dark:text-white">{paragraph_count(&state.text.get())}</span>
+                                                <span class="text-4xl text-black dark:text-white">{state.paragraph_count()}</span>
                                             </>
                                         },
                                         StatisticOption::ReadingTime => view! {
@@ -63,14 +60,14 @@ pub fn statistics_options_panel() -> impl IntoView {
                                                     </span>
                                                 </div>
                                                 <div class="flex flex-nowrap">
-                                                    <span class="text-3xl text-black dark:text-white">{move || format_duration( calculate_duration(state.word_total(), 275))}</span>
+                                                    <span class="text-3xl text-black dark:text-white">{move || format_duration( calculate_duration(state.word_count(), 275))}</span>
                                                 </div>
                                             </>
                                         },
                                         StatisticOption::Sentences => view! {
                                             <>
                                                 <div class="uppercase text-xs">{"Sentences"}</div>
-                                                <span class="text-4xl text-black dark:text-white">{sentence_count(&state.text.get())}</span>
+                                                <span class="text-4xl text-black dark:text-white">{state.sentence_count()}</span>
                                             </>
                                         },
                                         StatisticOption::SpeakingTime => view! {
@@ -82,14 +79,14 @@ pub fn statistics_options_panel() -> impl IntoView {
                                                     </span>
                                                 </div>
                                                 <div class="flex flex-nowrap">
-                                                    <span class="text-3xl text-black dark:text-white">{move || format_duration( calculate_duration(state.word_total(), 180))}</span>
+                                                    <span class="text-3xl text-black dark:text-white">{move || format_duration( calculate_duration(state.word_count(), 180))}</span>
                                                 </div>
                                             </>
                                         },
                                         StatisticOption::Words => view! {
                                             <>
                                                 <div class="uppercase text-xs">{"Words"}</div>
-                                                <span class="text-4xl text-black dark:text-white">{state.word_total()}</span>
+                                                <span class="text-4xl text-black dark:text-white">{state.word_count()}</span>
                                             </>
                                         },
                                     }
@@ -196,4 +193,11 @@ fn format_duration(duration: Duration) -> impl IntoView {
             </>
         }
     }
+}
+
+pub fn calculate_duration(word_count: usize, words_per_minute: u32) -> Duration {
+    let minutes = f64::from(word_count as u32) / f64::from(words_per_minute);
+    let seconds = minutes * 60.0;
+
+    Duration::from_secs(seconds as u64)
 }
