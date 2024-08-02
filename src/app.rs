@@ -19,6 +19,7 @@ pub enum StatisticOption {
     Paragraphs,
     ReadingTime,
     Sentences,
+    LongestSentenceWords,
     SpeakingTime,
     UniqueWords,
     Words,
@@ -56,6 +57,12 @@ where
         statistics_options
             .get()
             .contains(&StatisticOption::Sentences),
+    );
+
+    let show_longest_sentence_words = create_rw_signal(
+        statistics_options
+            .get()
+            .contains(&StatisticOption::LongestSentenceWords),
     );
 
     let show_paragraphs = create_rw_signal(
@@ -105,6 +112,10 @@ where
             options.push(StatisticOption::Sentences);
         }
 
+        if show_longest_sentence_words.get() {
+            options.push(StatisticOption::LongestSentenceWords);
+        }
+
         if show_paragraphs.get() {
             options.push(StatisticOption::Paragraphs);
         }
@@ -144,6 +155,10 @@ where
 
                 <div class="mb-4">
                     <ToggleSwitch label="Line Count" value=show_line_count/>
+                </div>
+
+                <div class="mb-4">
+                    <ToggleSwitch label="Longest Sentence (Words)" value=show_longest_sentence_words/>
                 </div>
 
                 <div class="mb-4">
@@ -244,6 +259,26 @@ impl GlobalState {
         let sentences: Vec<&str> = matches.map(|m| m.as_str()).collect();
 
         sentences.len()
+    }
+
+    pub fn show_longest_sentence_words_count(&self) -> usize {
+        let text = self.text.get();
+        let patten = &SENTENCE_REGEX;
+        let matches = patten.find_iter(&text);
+        let sentences: Vec<&str> = matches.map(|m| m.as_str()).collect();
+
+        let mut sentences: Vec<usize> = sentences
+            .iter()
+            .map(|sentence| {
+                let word_pattern = &WORD_REGEX;
+                let matches = word_pattern.find_iter(sentence);
+                matches.count()
+            })
+            .collect();
+
+        sentences.sort();
+
+        sentences.last().cloned().unwrap_or_default()
     }
 
     pub fn paragraph_count(&self) -> usize {
