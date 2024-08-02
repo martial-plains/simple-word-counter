@@ -14,6 +14,7 @@ static PARAGRAPH_REGEX: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\n\s*\n"
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum StatisticOption {
     Characters,
+    CharacterCountNoSpaces,
     LineCount,
     Paragraphs,
     ReadingTime,
@@ -43,6 +44,12 @@ where
         statistics_options
             .get()
             .contains(&StatisticOption::Characters),
+    );
+
+    let show_character_count_no_spaces = create_rw_signal(
+        statistics_options
+            .get()
+            .contains(&StatisticOption::CharacterCountNoSpaces),
     );
 
     let show_sentences = create_rw_signal(
@@ -90,6 +97,10 @@ where
             options.push(StatisticOption::Characters);
         }
 
+        if show_character_count_no_spaces.get() {
+            options.push(StatisticOption::CharacterCountNoSpaces);
+        }
+
         if show_sentences.get() {
             options.push(StatisticOption::Sentences);
         }
@@ -125,6 +136,10 @@ where
 
                 <div class="mb-4">
                     <ToggleSwitch label="Characters" value=show_characters/>
+                </div>
+
+                <div class="mb-4">
+                    <ToggleSwitch label="Character Count (No Spaces)" value=show_character_count_no_spaces/>
                 </div>
 
                 <div class="mb-4">
@@ -241,6 +256,10 @@ impl GlobalState {
         let paragraphs: Vec<&str> = pattern.split(&text).collect();
 
         paragraphs.len()
+    }
+
+    pub fn character_count_no_spaces(&self) -> usize {
+        self.text.get().chars().filter(|char| *char != ' ').count()
     }
 
     pub fn character_total(&self) -> usize {
