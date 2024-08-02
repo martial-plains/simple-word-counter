@@ -22,6 +22,7 @@ pub enum StatisticOption {
     LongestSentenceWords,
     ShortestSentenceWords,
     AvgSentenceWords,
+    AvgSentenceChars,
     AvgWordLength,
     SpeakingTime,
     UniqueWords,
@@ -78,6 +79,12 @@ where
         statistics_options
             .get()
             .contains(&StatisticOption::AvgSentenceWords),
+    );
+
+    let show_avg_sentence_chars = create_rw_signal(
+        statistics_options
+            .get()
+            .contains(&StatisticOption::AvgSentenceChars),
     );
 
     let show_avg_word_length = create_rw_signal(
@@ -145,6 +152,10 @@ where
             options.push(StatisticOption::AvgSentenceWords);
         }
 
+        if show_avg_sentence_chars.get() {
+            options.push(StatisticOption::AvgSentenceChars);
+        }
+
         if show_avg_word_length.get() {
             options.push(StatisticOption::AvgWordLength);
         }
@@ -180,6 +191,10 @@ where
 
                 <div class="mb-4">
                     <ToggleSwitch label="Average Sentence (Words)" value=show_avg_sentence_words/>
+                </div>
+
+                <div class="mb-4">
+                    <ToggleSwitch label="Average Sentence (Characters)" value=show_avg_sentence_chars/>
                 </div>
 
                 <div class="mb-4">
@@ -304,6 +319,18 @@ impl GlobalState {
         };
 
         words.len() as f64 / sentences.len() as f64
+    }
+
+    pub fn avg_sentence_chars(&self) -> f64 {
+        let text = self.text.get();
+
+        let sentences: Vec<usize> = {
+            let pattern = &SENTENCE_REGEX;
+            let matches = pattern.find_iter(&text);
+            matches.map(|m| m.as_str().len()).collect()
+        };
+
+        text.chars().count() as f64 / sentences.len() as f64
     }
 
     pub fn unique_word_count(&self) -> usize {

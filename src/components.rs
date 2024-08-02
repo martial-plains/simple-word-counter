@@ -94,6 +94,12 @@ pub fn statistics_options_panel() -> impl IntoView {
                                                 <span class="text-4xl text-black dark:text-white">{format!("{:.1}", state.avg_sentence_words())}</span>
                                             </>
                                         },
+                                        StatisticOption::AvgSentenceChars => view! {
+                                            <>
+                                                <div class="uppercase text-xs">{"Avg. Sentence (Characters)"}</div>
+                                                <span class="text-4xl text-black dark:text-white">{format!("{:.1}", state.avg_sentence_chars())}</span>
+                                            </>
+                                        },
                                         StatisticOption::AvgWordLength => view! {
                                             <>
                                                 <div class="uppercase text-xs">{"Avg. Word Length"}</div>
