@@ -19,7 +19,7 @@ pub fn statistics_options_panel() -> impl IntoView {
                     let mut rows = Vec::new();
 
 
-                    for (index, option) in state.statistics_options.get().iter().enumerate() {
+                    for (index, option) in state.statistics_options.get().into_iter().enumerate() {
                         if index % 2 == 0 {
                             rows.push(view! {
                                 <div class="border-b-2 border-gray-700 flex justify-between mb-4">
@@ -116,6 +116,19 @@ pub fn statistics_options_panel() -> impl IntoView {
                                                 </div>
                                                 <div class="flex flex-nowrap">
                                                     <span class="text-3xl text-black dark:text-white">{move || format_duration( calculate_duration(state.word_count(), 180))}</span>
+                                                </div>
+                                            </>
+                                        },
+                                        StatisticOption::HandWritingTime(n) => view! {
+                                            <>
+                                                <div class="uppercase text-xs whitespace-nowrap">
+                                                    {"Hand Writing Time"}
+                                                    <span title=format!("Based on an average hand writing speed of {n} characters per minute") class="inline-block">
+                                                        <i class="fa-solid fa-circle-question"></i>
+                                                    </span>
+                                                </div>
+                                                <div class="flex flex-nowrap">
+                                                    <span class="text-3xl text-black dark:text-white">{move || format_duration( calculate_duration(state.text.get().len(), n as u32))}</span>
                                                 </div>
                                             </>
                                         },
