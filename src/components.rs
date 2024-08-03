@@ -57,16 +57,16 @@ pub fn statistics_options_panel() -> impl IntoView {
                                                 <span class="text-4xl text-black dark:text-white">{state.paragraph_count()}</span>
                                             </>
                                         },
-                                        StatisticOption::ReadingTime => view! {
+                                        StatisticOption::ReadingTime(n) => view! {
                                             <>
                                                 <div class="uppercase text-xs whitespace-nowrap">
                                                     {"Reading Time"}
-                                                    <span title="Based on 275 words per minute" class="inline-block">
+                                                    <span title=format!("Based on {n} words per minute") class="inline-block">
                                                         <i class="fa-solid fa-circle-question"></i>
                                                     </span>
                                                 </div>
                                                 <div class="flex flex-nowrap">
-                                                    <span class="text-3xl text-black dark:text-white">{move || format_duration( calculate_duration(state.word_count(), 275))}</span>
+                                                    <span class="text-3xl text-black dark:text-white">{move || format_duration( calculate_duration(state.word_count(), n as u32))}</span>
                                                 </div>
                                             </>
                                         },
@@ -106,16 +106,16 @@ pub fn statistics_options_panel() -> impl IntoView {
                                                 <span class="text-4xl text-black dark:text-white">{format!("{:.1}", state.avg_word_count())}</span>
                                             </>
                                         },
-                                        StatisticOption::SpeakingTime => view! {
+                                        StatisticOption::SpeakingTime(n) => view! {
                                             <>
                                                 <div class="uppercase text-xs whitespace-nowrap">
                                                     {"Speaking Time"}
-                                                    <span title="Based on 180 words per minute" class="inline-block">
+                                                    <span title=format!("Based on {n} words per minute") class="inline-block">
                                                         <i class="fa-solid fa-circle-question"></i>
                                                     </span>
                                                 </div>
                                                 <div class="flex flex-nowrap">
-                                                    <span class="text-3xl text-black dark:text-white">{move || format_duration( calculate_duration(state.word_count(), 180))}</span>
+                                                    <span class="text-3xl text-black dark:text-white">{move || format_duration( calculate_duration(state.word_count(), n as u32))}</span>
                                                 </div>
                                             </>
                                         },

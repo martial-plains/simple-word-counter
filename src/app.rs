@@ -26,8 +26,8 @@ pub enum StatisticOption {
     AvgSentenceWords,
     AvgSentenceChars,
     AvgWordLength,
-    ReadingTime,
-    SpeakingTime,
+    ReadingTime(usize),
+    SpeakingTime(usize),
     HandWritingTime(usize),
     UniqueWords,
     Words,
@@ -110,17 +110,49 @@ where
             .contains(&StatisticOption::LineCount),
     );
 
+    let reading_time = create_rw_signal(
+        storage
+            .get_item("reading_time")
+            .unwrap()
+            .unwrap_or_else(|| String::from("275"))
+            .parse::<usize>()
+            .unwrap_or_default(),
+    );
+
     let show_reading_time = create_rw_signal(
         statistics_options
             .get()
-            .contains(&StatisticOption::ReadingTime),
+            .contains(&StatisticOption::ReadingTime(reading_time.get())),
+    );
+
+    let update_reading_time = move |ev| {
+        let storage = window().local_storage().unwrap().unwrap();
+        let value: String = event_target_value(&ev);
+        storage.set_item("reading_time", &value).unwrap();
+        reading_time.set(value.parse::<usize>().unwrap_or_default());
+    };
+
+    let speaking_time = create_rw_signal(
+        storage
+            .get_item("speaking_time")
+            .unwrap()
+            .unwrap_or_else(|| String::from("180"))
+            .parse::<usize>()
+            .unwrap_or_default(),
     );
 
     let show_speaking_time = create_rw_signal(
         statistics_options
             .get()
-            .contains(&StatisticOption::SpeakingTime),
+            .contains(&StatisticOption::SpeakingTime(speaking_time.get())),
     );
+
+    let update_speaking_time = move |ev| {
+        let storage = window().local_storage().unwrap().unwrap();
+        let value: String = event_target_value(&ev);
+        storage.clone().set_item("speaking_time", &value).unwrap();
+        speaking_time.set(value.parse::<usize>().unwrap_or_default());
+    };
 
     let hand_writing_time = create_rw_signal(
         storage
@@ -195,11 +227,11 @@ where
         }
 
         if show_reading_time.get() {
-            options.push(StatisticOption::ReadingTime);
+            options.push(StatisticOption::ReadingTime(reading_time.get()));
         }
 
         if show_speaking_time.get() {
-            options.push(StatisticOption::SpeakingTime);
+            options.push(StatisticOption::SpeakingTime(speaking_time.get()));
         }
 
         if show_hand_writing_time.get() {
@@ -260,6 +292,9 @@ where
 
                 <div class="mb-4">
                     <ToggleSwitch label="Reading Time" value=show_reading_time/>
+                    <div>
+                        <input type="text" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" prop:value={move || reading_time.get() } placeholder="275" required on:input=update_reading_time />
+                    </div>
                 </div>
 
                 <div class="mb-4">
@@ -272,6 +307,9 @@ where
 
                 <div class="mb-4">
                     <ToggleSwitch label="Speaking Time" value=show_speaking_time/>
+                    <div>
+                        <input type="text" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" prop:value={move || speaking_time.get() } placeholder="180" required on:input=update_speaking_time />
+                    </div>
                 </div>
 
                 <div class="mb-4">
@@ -308,8 +346,8 @@ impl GlobalState {
                         StatisticOption::Characters,
                         StatisticOption::Sentences,
                         StatisticOption::Paragraphs,
-                        StatisticOption::ReadingTime,
-                        StatisticOption::SpeakingTime,
+                        StatisticOption::ReadingTime(275),
+                        StatisticOption::SpeakingTime(180),
                     ]
                 },
                 |s| serde_json::from_str(&s).unwrap(),
