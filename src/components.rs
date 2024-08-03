@@ -26,7 +26,7 @@ pub fn statistics_options_panel() -> impl IntoView {
                                     {row.clone()}
                                 </div>
                             });
-                            row.clear()
+                            row.clear();
                         }
 
                         row.push(view! {
@@ -168,7 +168,7 @@ pub fn toggle_switch(label: &'static str, value: RwSignal<bool>) -> impl IntoVie
     create_effect(move |_| {
         if let Some(inputs) = input_ref.clone().get() {
             println!("{}", value.get());
-            inputs.set_checked(value.get())
+            inputs.set_checked(value.get());
         }
     });
 

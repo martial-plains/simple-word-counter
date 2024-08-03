@@ -1,4 +1,7 @@
-use leptos::{ev::MouseEvent, *};
+use leptos::{
+    component, create_effect, create_rw_signal, document, ev::MouseEvent, event_target_value,
+    provide_context, spawn_local, view, window, IntoView, RwSignal, SignalGet, SignalSet,
+};
 use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -263,20 +266,20 @@ impl GlobalState {
 
         let text = create_rw_signal(storage.get_item("text").unwrap().unwrap_or_default());
         let dictionary = create_rw_signal(HashMap::new());
-        let statistics_options = create_rw_signal(
-            storage
-                .get_item("statistics_options")
-                .unwrap()
-                .map(|s| serde_json::from_str(&s).unwrap())
-                .unwrap_or(vec![
-                    StatisticOption::Words,
-                    StatisticOption::Characters,
-                    StatisticOption::Sentences,
-                    StatisticOption::Paragraphs,
-                    StatisticOption::ReadingTime,
-                    StatisticOption::SpeakingTime,
-                ]),
-        );
+        let statistics_options =
+            create_rw_signal(storage.get_item("statistics_options").unwrap().map_or_else(
+                || {
+                    vec![
+                        StatisticOption::Words,
+                        StatisticOption::Characters,
+                        StatisticOption::Sentences,
+                        StatisticOption::Paragraphs,
+                        StatisticOption::ReadingTime,
+                        StatisticOption::SpeakingTime,
+                    ]
+                },
+                |s| serde_json::from_str(&s).unwrap(),
+            ));
 
         Self {
             text,
@@ -289,9 +292,8 @@ impl GlobalState {
         let text = self.text.get();
         let pattern = &WORD_REGEX;
         let matches = pattern.find_iter(&text);
-        let words: Vec<&str> = matches.map(|m| m.as_str()).collect();
 
-        words.len()
+        matches.count()
     }
 
     pub fn avg_word_count(&self) -> f64 {
@@ -343,7 +345,7 @@ impl GlobalState {
             .iter()
             .fold(Vec::new(), |mut acc, word| {
                 if !acc.contains(word) {
-                    acc.push(word)
+                    acc.push(word);
                 }
 
                 acc
@@ -355,9 +357,8 @@ impl GlobalState {
         let text = self.text.get();
         let pattern = &SENTENCE_REGEX;
         let matches = pattern.find_iter(&text);
-        let sentences: Vec<&str> = matches.map(|m| m.as_str()).collect();
 
-        sentences.len()
+        matches.count()
     }
 
     pub fn show_longest_sentence_words_count(&self) -> usize {
@@ -375,9 +376,9 @@ impl GlobalState {
             })
             .collect();
 
-        sentences.sort();
+        sentences.sort_unstable();
 
-        sentences.last().cloned().unwrap_or_default()
+        sentences.last().copied().unwrap_or_default()
     }
 
     pub fn show_shortest_sentence_words_count(&self) -> usize {
@@ -395,9 +396,9 @@ impl GlobalState {
             })
             .collect();
 
-        sentences.sort();
+        sentences.sort_unstable();
 
-        sentences.first().cloned().unwrap_or_default()
+        sentences.first().copied().unwrap_or_default()
     }
 
     pub fn paragraph_count(&self) -> usize {
@@ -407,9 +408,8 @@ impl GlobalState {
         }
 
         let pattern = &PARAGRAPH_REGEX;
-        let paragraphs: Vec<&str> = pattern.split(&text).collect();
 
-        paragraphs.len()
+        pattern.split(&text).count()
     }
 
     pub fn character_count_no_spaces(&self) -> usize {
@@ -449,9 +449,9 @@ pub fn App() -> impl IntoView {
                 for word in re.find_iter(&text) {
                     let word = word.as_str().to_lowercase();
                     if occurrence.contains_key(&word) {
-                        let _ = occurrence.entry(word.to_owned()).and_modify(|w| *w += 1);
+                        let _ = occurrence.entry(word.clone()).and_modify(|w| *w += 1);
                     } else {
-                        let _ = occurrence.insert(word.to_owned(), 1);
+                        let _ = occurrence.insert(word.clone(), 1);
                     }
                 }
                 occurrence
@@ -563,7 +563,7 @@ pub fn App() -> impl IntoView {
                                                             dictionary.iter().enumerate().rev().map(|(index, (key, value))| {
                                                                 view! {
                                                                     <li class=format!("keywords-item flex justify-between items-center px-2 {} dark:bg-gray-800", if index % 2 == 0 { "bg-gray-300" } else { "bg-white" })>
-                                                                        <div class="inline-block overflow-hidden overflow-ellipsis text-sm">{key.to_string()}</div>
+                                                                        <div class="inline-block overflow-hidden overflow-ellipsis text-sm">{(*key).to_string()}</div>
                                                                         <div class="flex items-baseline text-gray-700 ">
                                                                             <span class="font-semibold dark:text-white">{value.to_string()}</span>
                                                                             <span class="text-xs w-14 text-right dark:text-white">{format!("{:.2}%", (**value as f32 / dictionary.len() as  f32) * 100.0)}</span>
