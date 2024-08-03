@@ -20,14 +20,15 @@ pub enum StatisticOption {
     CharacterCountNoSpaces,
     LineCount,
     Paragraphs,
-    ReadingTime,
     Sentences,
     LongestSentenceWords,
     ShortestSentenceWords,
     AvgSentenceWords,
     AvgSentenceChars,
     AvgWordLength,
+    ReadingTime,
     SpeakingTime,
+    HandWritingTime(usize),
     UniqueWords,
     Words,
 }
@@ -40,6 +41,7 @@ pub fn options_dialog<F>(
 where
     F: Fn(MouseEvent) + 'static,
 {
+    let storage = window().local_storage().unwrap().unwrap();
     let show_words = create_rw_signal(statistics_options.get().contains(&StatisticOption::Words));
 
     let show_unique_words = create_rw_signal(
@@ -120,6 +122,27 @@ where
             .contains(&StatisticOption::SpeakingTime),
     );
 
+    let hand_writing_time = create_rw_signal(
+        storage
+            .get_item("hand_writing_time")
+            .unwrap()
+            .unwrap_or_else(|| String::from("68"))
+            .parse::<usize>()
+            .unwrap_or_default(),
+    );
+
+    let show_hand_writing_time = create_rw_signal(
+        statistics_options
+            .get()
+            .contains(&StatisticOption::HandWritingTime(hand_writing_time.get())),
+    );
+
+    let update_hand_writing_time = move |ev| {
+        let value: String = event_target_value(&ev);
+        storage.set_item("hand_writing_time", &value).unwrap();
+        hand_writing_time.set(value.parse::<usize>().unwrap_or_default());
+    };
+
     create_effect(move |_| {
         let mut options = Vec::new();
 
@@ -179,6 +202,10 @@ where
             options.push(StatisticOption::SpeakingTime);
         }
 
+        if show_hand_writing_time.get() {
+            options.push(StatisticOption::HandWritingTime(hand_writing_time.get()));
+        }
+
         statistics_options.set(options);
     });
 
@@ -210,6 +237,13 @@ where
 
                 <div class="mb-4">
                     <ToggleSwitch label="Character Count (No Spaces)" value=show_character_count_no_spaces/>
+                </div>
+
+                <div class="mb-4">
+                    <ToggleSwitch label="Hand Writing Time" value=show_hand_writing_time/>
+                    <div>
+                        <input type="text" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" prop:value={move || hand_writing_time.get() } placeholder="68" required on:input=update_hand_writing_time />
+                    </div>
                 </div>
 
                 <div class="mb-4">
