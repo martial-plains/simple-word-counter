@@ -328,6 +328,7 @@ where
 #[derive(Debug, Default, Clone, Copy)]
 pub struct GlobalState {
     pub text: RwSignal<String>,
+    pub match_case: RwSignal<bool>,
     pub dictionary: RwSignal<HashMap<String, u32>>,
     pub statistics_options: RwSignal<Vec<StatisticOption>>,
 }
@@ -337,6 +338,12 @@ impl GlobalState {
         let storage = window().local_storage().unwrap().unwrap();
 
         let text = create_rw_signal(storage.get_item("text").unwrap().unwrap_or_default());
+        let case_insensitive = create_rw_signal(
+            storage
+                .get_item("case_insensitive")
+                .unwrap()
+                .map_or_else(|| false, |s| s.parse::<bool>().unwrap_or(true)),
+        );
         let dictionary = create_rw_signal(HashMap::new());
         let statistics_options =
             create_rw_signal(storage.get_item("statistics_options").unwrap().map_or_else(
@@ -355,6 +362,7 @@ impl GlobalState {
 
         Self {
             text,
+            match_case: case_insensitive,
             dictionary,
             statistics_options,
         }
@@ -416,7 +424,8 @@ impl GlobalState {
         words
             .iter()
             .fold(Vec::new(), |mut acc, word| {
-                if !acc.contains(word) {
+                let word = word.to_lowercase();
+                if !acc.contains(&word) {
                     acc.push(word);
                 }
 
@@ -519,7 +528,12 @@ pub fn App() -> impl IntoView {
                 let mut occurrence: HashMap<String, u32> = HashMap::new();
                 let re = &WORD_REGEX;
                 for word in re.find_iter(&text) {
-                    let word = word.as_str().to_lowercase();
+                    let word = if state.match_case.get() {
+                        word.as_str().to_owned()
+                    } else {
+                        word.as_str().to_lowercase()
+                    };
+
                     if occurrence.contains_key(&word) {
                         let _ = occurrence.entry(word.clone()).and_modify(|w| *w += 1);
                     } else {
@@ -547,6 +561,15 @@ pub fn App() -> impl IntoView {
         });
     };
 
+    let toggle_case_insensitive = move |_| {
+        let storage = window().local_storage().unwrap().unwrap();
+
+        state.match_case.set(!state.match_case.get());
+        storage
+            .set("match_case", &state.match_case.get().to_string())
+            .unwrap();
+    };
+
     let open_options = |_: MouseEvent| {
         let dialog = document().get_element_by_id("dialog").unwrap();
         let overlay = document().get_element_by_id("overlay").unwrap();
@@ -563,9 +586,11 @@ pub fn App() -> impl IntoView {
         overlay.class_list().add_1("hidden").unwrap();
     };
 
+    // TODO: Make Case Insensitive Button
     create_effect(move |_| {
         let storage = window().local_storage().unwrap().unwrap();
         let _ = state.text.get();
+        let _ = state.match_case.get();
         get_result();
 
         storage
@@ -593,6 +618,16 @@ pub fn App() -> impl IntoView {
                                         <svg class="w-4 h-4" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" fill="currentColor"><path d="M38 12.83L35.17 10 24 21.17 12.83 10 10 12.83 21.17 24 10 35.17 12.83 38 24 26.83 35.17 38 38 35.17 26.83 24z"/><path d="M0 0h48v48H0z" fill="none"/></svg>
                                         <span class="sr-only">{ "Clear Input" }</span>
                                     </button>
+
+                                    {
+                                        move || view! {
+                                            <button type="button" class=format!("p-2 text-gray-500 rounded cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600 {}", if state.match_case.get() { "bg-gray-50 text-gray-200" } else { "" }) on:click=toggle_case_insensitive>
+                                                <img class="w-4 h-4" src="public/icons/case-insensitive.svg" alt="Aa" height="48" width="48" />
+                                                <span class="sr-only">{ "Case Insensitive" }</span>
+                                            </button>
+                                        }
+                                    }
+
                                     <button type="button" class="p-2 text-gray-500 rounded cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600" on:click=open_options>
                                         <svg class="w-4 h-4" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
                                                 <path d="M18 7.5h-.423l-.452-1.09.3-.3a1.5 1.5 0 0 0 0-2.121L16.01 2.575a1.5 1.5 0 0 0-2.121 0l-.3.3-1.089-.452V2A1.5 1.5 0 0 0 11 .5H9A1.5 1.5 0 0 0 7.5 2v.423l-1.09.452-.3-.3a1.5 1.5 0 0 0-2.121 0L2.576 3.99a1.5 1.5 0 0 0 0 2.121l.3.3L2.423 7.5H2A1.5 1.5 0 0 0 .5 9v2A1.5 1.5 0 0 0 2 12.5h.423l.452 1.09-.3.3a1.5 1.5 0 0 0 0 2.121l1.415 1.413a1.5 1.5 0 0 0 2.121 0l.3-.3 1.09.452V18A1.5 1.5 0 0 0 9 19.5h2a1.5 1.5 0 0 0 1.5-1.5v-.423l1.09-.452.3.3a1.5 1.5 0 0 0 2.121 0l1.415-1.414a1.5 1.5 0 0 0 0-2.121l-.3-.3.452-1.09H18a1.5 1.5 0 0 0 1.5-1.5V9A1.5 1.5 0 0 0 18 7.5Zm-8 6a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/>
