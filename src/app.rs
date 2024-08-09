@@ -1,3 +1,4 @@
+use gloo::file::{Blob, ObjectUrl};
 use leptos::{
     component, create_effect, create_rw_signal, document, ev::MouseEvent, event_target_value,
     provide_context, spawn_local, view, window, IntoView, RwSignal, SignalGet, SignalSet,
@@ -6,6 +7,8 @@ use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::{collections::HashMap, sync::LazyLock};
+use wasm_bindgen::JsCast;
+use web_sys::HtmlElement;
 
 use crate::components::{StatisticsOptionsPanel, ToggleSwitch};
 
@@ -586,7 +589,29 @@ pub fn App() -> impl IntoView {
         overlay.class_list().add_1("hidden").unwrap();
     };
 
-    // TODO: Make Case Insensitive Button
+    let export_csv = move |_: MouseEvent| {
+        struct Record {
+            word: String,
+            count: usize,
+        }
+
+        let result = Vec::new();
+        let mut wtr = csv::Writer::from_writer(result);
+
+        // We still need to write headers manually.
+        wtr.write_record(["Word", "Count"]).unwrap();
+
+        for entry in state.dictionary.get() {
+            wtr.serialize(entry).unwrap()
+        }
+
+        let data = String::from_utf8(wtr.into_inner().unwrap()).unwrap();
+        let file = Blob::new(&*data);
+        let object_url = ObjectUrl::from(file);
+
+        download(&object_url, "results.csv")
+    };
+
     create_effect(move |_| {
         let storage = window().local_storage().unwrap().unwrap();
         let _ = state.text.get();
@@ -633,6 +658,11 @@ pub fn App() -> impl IntoView {
                                                 <path d="M18 7.5h-.423l-.452-1.09.3-.3a1.5 1.5 0 0 0 0-2.121L16.01 2.575a1.5 1.5 0 0 0-2.121 0l-.3.3-1.089-.452V2A1.5 1.5 0 0 0 11 .5H9A1.5 1.5 0 0 0 7.5 2v.423l-1.09.452-.3-.3a1.5 1.5 0 0 0-2.121 0L2.576 3.99a1.5 1.5 0 0 0 0 2.121l.3.3L2.423 7.5H2A1.5 1.5 0 0 0 .5 9v2A1.5 1.5 0 0 0 2 12.5h.423l.452 1.09-.3.3a1.5 1.5 0 0 0 0 2.121l1.415 1.413a1.5 1.5 0 0 0 2.121 0l.3-.3 1.09.452V18A1.5 1.5 0 0 0 9 19.5h2a1.5 1.5 0 0 0 1.5-1.5v-.423l1.09-.452.3.3a1.5 1.5 0 0 0 2.121 0l1.415-1.414a1.5 1.5 0 0 0 0-2.121l-.3-.3.452-1.09H18a1.5 1.5 0 0 0 1.5-1.5V9A1.5 1.5 0 0 0 18 7.5Zm-8 6a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7Z"/>
                                             </svg>
                                         <span class="sr-only">{ "Settings" }</span>
+                                    </button>
+
+                                    <button type="button" class="p-2 text-gray-500 rounded cursor-pointer hover:text-gray-900 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-white dark:hover:bg-gray-600" on:click=export_csv>
+                                        <img class="w-4 h-4" src="public/icons/download.svg" alt="Export CSV" height="48" width="48" />
+                                        <span class="sr-only">{ "Export CSV" }</span>
                                     </button>
                                 </div>
                             </div>
@@ -693,4 +723,15 @@ pub fn App() -> impl IntoView {
             </div>
         </main>
     }
+}
+
+fn download(path: &str, file_name: &str) {
+    let anchor = document().create_element("a").unwrap();
+    anchor.set_attribute("href", path).unwrap();
+    anchor.set_attribute("download", file_name).unwrap();
+
+    document().body().unwrap().append_child(&anchor).unwrap();
+
+    anchor.dyn_ref::<HtmlElement>().unwrap().click();
+    document().body().unwrap().remove_child(&anchor).unwrap();
 }
