@@ -10,8 +10,8 @@
   <link rel="stylesheet" href="/simple-word-counter/main-3ca6056662734202.css" integrity="sha384-Wvsr0I/Cemb1yr5y3E5g2JY000M1DA3wP93bH3vVl1jMPWm2s/0lEYSy9XZOyP8j"/>
   
 <script type="module">
-import init, * as bindings from '/simple-word-counter/simple-word-counter-web-bcc1217f1753a91f.js';
-const wasm = await init({ module_or_path: '/simple-word-counter/simple-word-counter-web-bcc1217f1753a91f_bg.wasm' });
+import init, * as bindings from '/simple-word-counter/simple-word-counter-web-9fe5070019939f2a.js';
+const wasm = await init({ module_or_path: '/simple-word-counter/simple-word-counter-web-9fe5070019939f2a_bg.wasm' });
 
 
 window.wasmBindings = bindings;
@@ -38,6 +38,6 @@ dispatchEvent(new CustomEvent("TrunkApplicationStarted", {detail: {wasm}}));
       }
     }
   </script>
-<link rel="modulepreload" href="/simple-word-counter/simple-word-counter-web-bcc1217f1753a91f.js" crossorigin="anonymous" integrity="sha384-5fjlnd8ZT0iApqewL131WjJv05kyhcMkFTo3zjtobFZbF+EypsCJsqh3IY8K0kBW"><link rel="preload" href="/simple-word-counter/simple-word-counter-web-bcc1217f1753a91f_bg.wasm" crossorigin="anonymous" integrity="sha384-cYAg5HX9vIQ8vkbtupjUKyraE42UuEPHh66L8Lu3sfzN7wFKE9FfpDvsK6Aj+FOD" as="fetch" type="application/wasm"></head>
+<link rel="modulepreload" href="/simple-word-counter/simple-word-counter-web-9fe5070019939f2a.js" crossorigin="anonymous" integrity="sha384-Cku7C42hDERPvwooUeSXnMK8GUdO/0ZJTLdQq7wI/wyWUKLHXih19RswR9LmYwKN"><link rel="preload" href="/simple-word-counter/simple-word-counter-web-9fe5070019939f2a_bg.wasm" crossorigin="anonymous" integrity="sha384-6M2B2D3/xAUda/nJcipOJiXsbx3vRXdsOsiGrOPh/JiiNBuMRAbyweXsoa/cu4ro" as="fetch" type="application/wasm"></head>
 
 </html>
